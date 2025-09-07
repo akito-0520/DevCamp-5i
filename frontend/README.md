@@ -1,18 +1,24 @@
-# Welcome to React Router!
+# 高専ハッカソンマッチングシステム
 
-A modern, production-ready template for building full-stack React applications using React Router.
+高専生向けのハッカソンチーム編成プラットフォームです。ルームベースのビジュアルインターフェースで、ハッカソンのチーム編成を自動化します。
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
 
-## Features
+## 機能
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- 📍 ルームベースのビジュアルインターフェース
+- 👥 ユーザープロファイル管理（Discord連携、スキル、学年、学校）
+- 🎯 自動チーム編成（隣接する部屋でチーム形成）
+- 🎨 チームの視覚的表示（色分け）
+- 🔍 スキル・学年によるフィルタリング
+- 🚀 リアルタイムな部屋移動
+
+## 技術スタック
+
+- React 19 + React Router 7
+- TypeScript
+- TailwindCSS 4
+- Zustand（状態管理）
+- React DnD（ドラッグ&ドロップ予定）
 
 ## Getting Started
 

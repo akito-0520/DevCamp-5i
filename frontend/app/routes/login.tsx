@@ -41,13 +41,13 @@ export async function action({ request }: Route.ActionArgs) {
         JSON.stringify({
           error: result.error || "Googleログインに失敗しました",
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
     return new Response(
       JSON.stringify({ error: "IDトークンが提供されていません" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
 
@@ -61,7 +61,7 @@ export async function action({ request }: Route.ActionArgs) {
       JSON.stringify({
         errors: { email: "メールアドレスを入力してください", password: null },
       }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
 
@@ -70,7 +70,7 @@ export async function action({ request }: Route.ActionArgs) {
       JSON.stringify({
         errors: { email: null, password: "パスワードを入力してください" },
       }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
 

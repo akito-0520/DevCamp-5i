@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export interface User {
   id: string;
@@ -46,11 +46,11 @@ interface RoomStore {
   teams: Map<string, Team>;
   hackathons: Map<string, Hackathon>;
   currentUserId: string | null;
-  
+
   initializeRooms: (gridSize: number) => void;
   moveUserToRoom: (userId: string, roomId: number) => void;
   updateUser: (userId: string, userData: Partial<User>) => void;
-  createTeam: (teamData: Omit<Team, 'id'>) => string;
+  createTeam: (teamData: Omit<Team, "id">) => string;
   assignTeamToRooms: (teamId: string, roomIds: number[]) => void;
   setCurrentUser: (userId: string) => void;
   addUser: (user: User) => void;
@@ -62,7 +62,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
   teams: new Map(),
   hackathons: new Map(),
   currentUserId: null,
-  
+
   initializeRooms: (gridSize) => {
     const rooms: Room[] = [];
     let id = 0;
@@ -73,10 +73,10 @@ export const useRoomStore = create<RoomStore>((set) => ({
     }
     set({ rooms });
   },
-  
+
   moveUserToRoom: (userId, roomId) => {
     set((state) => {
-      const rooms = state.rooms.map(room => {
+      const rooms = state.rooms.map((room) => {
         if (room.userId === userId) {
           return { ...room, userId: undefined, user: undefined };
         }
@@ -89,7 +89,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
       return { rooms };
     });
   },
-  
+
   updateUser: (userId, userData) => {
     set((state) => {
       const users = new Map(state.users);
@@ -100,7 +100,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
       return { users };
     });
   },
-  
+
   createTeam: (teamData) => {
     const teamId = `team-${Date.now()}`;
     const team: Team = { ...teamData, id: teamId };
@@ -111,10 +111,10 @@ export const useRoomStore = create<RoomStore>((set) => ({
     });
     return teamId;
   },
-  
+
   assignTeamToRooms: (teamId, roomIds) => {
     set((state) => {
-      const rooms = state.rooms.map(room => {
+      const rooms = state.rooms.map((room) => {
         if (roomIds.includes(room.id)) {
           return { ...room, teamId };
         }
@@ -123,11 +123,11 @@ export const useRoomStore = create<RoomStore>((set) => ({
       return { rooms };
     });
   },
-  
+
   setCurrentUser: (userId) => {
     set({ currentUserId: userId });
   },
-  
+
   addUser: (user) => {
     set((state) => {
       const users = new Map(state.users);

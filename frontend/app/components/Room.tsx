@@ -1,4 +1,4 @@
-import type { Room as RoomType } from '../store/useRoomStore';
+import type { Room as RoomType } from "../store/useRoomStore";
 
 interface RoomProps {
   room: RoomType;
@@ -9,16 +9,16 @@ interface RoomProps {
 
 export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
   const { user } = room;
-  
+
   return (
     <div
       onClick={onClick}
       className={`
         relative w-20 h-20 border-2 rounded-lg cursor-pointer
         transition-all duration-200 hover:scale-105
-        ${isCurrentUser ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900'}
-        ${teamColor ? `ring-4 ring-${teamColor}-400 ring-opacity-50` : ''}
-        ${!user ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : ''}
+        ${isCurrentUser ? "border-blue-500 bg-blue-50 dark:bg-blue-950" : "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"}
+        ${teamColor ? `ring-4 ring-${teamColor}-400 ring-opacity-50` : ""}
+        ${!user ? "hover:bg-gray-50 dark:hover:bg-gray-800" : ""}
       `}
     >
       {user ? (
@@ -45,9 +45,9 @@ export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
           <span className="text-gray-400 dark:text-gray-600 text-xs">空き</span>
         </div>
       )}
-      
+
       {room.teamId && (
-        <div 
+        <div
           className={`absolute -top-2 -right-2 w-5 h-5 rounded-full bg-${teamColor}-500 flex items-center justify-center`}
           title={`Team ${room.teamId}`}
         >

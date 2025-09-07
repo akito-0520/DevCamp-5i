@@ -4,7 +4,13 @@ import typescriptParser from "@typescript-eslint/parser";
 export default [
   {
     files: ["**/*.{ts,tsx}"],
-    ignores: ["node_modules/**", "build/**", ".react-router/**", "**/*.svg"],
+    ignores: [
+      "node_modules/**",
+      "build/**",
+      ".react-router/**",
+      "**/*.svg",
+      "app/welcome/**",
+    ],
     languageOptions: {
       parser: typescriptParser,
       ecmaVersion: "latest",

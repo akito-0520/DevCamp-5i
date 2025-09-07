@@ -2,6 +2,12 @@ import type { Route } from "./+types/home";
 import { RoomGrid } from "../components/RoomGrid";
 import { useRoomStore } from "../store/useRoomStore";
 import { useEffect } from "react";
+import { requireUserId } from "../services/auth.server";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const userId = await requireUserId(request);
+  return { userId };
+}
 
 export function meta({}: Route.MetaArgs) {
   return [

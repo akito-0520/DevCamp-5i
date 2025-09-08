@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import type { Route } from "./+types/login";
-import { createUserSession, getUserId } from "../services/auth.server";
+import { createUserSession, getUserId } from "../common/services/auth.server";
 import { useState, useEffect } from "react";
 
 export function meta({}: Route.MetaArgs) {
@@ -28,7 +28,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     if (typeof idToken === "string") {
       const { verifyIdToken, createUserIdFromFirebase } = await import(
-        "../services/firebase.server"
+        "../common/services/firebase.server"
       );
       const result = await verifyIdToken(idToken);
 
@@ -102,7 +102,7 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
 
     const checkGoogleRedirect = async () => {
       const { checkRedirectResult } = await import(
-        "../services/firebase-auth.client"
+        "../common/services/firebase-auth.client"
       );
       const result = await checkRedirectResult();
 
@@ -131,7 +131,7 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
 
     // 動的インポートでクライアントサイドのみで実行
     const { signInWithGoogle } = await import(
-      "../services/firebase-auth.client"
+      "../common/services/firebase-auth.client"
     );
     const result = await signInWithGoogle();
 

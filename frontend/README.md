@@ -19,6 +19,10 @@
 - Zustand（状態管理）
 - React DnD（ドラッグ&ドロップ予定）
 
+## ディレクトリ構成
+
+[参考](https://qiita.com/hikagami/items/f114ed23d321f7686fb5)
+
 ## Getting Started
 
 ### Installation
@@ -90,3 +94,5 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 ---
 
 Built with ❤️ using React Router.
+
+

@@ -2,16 +2,16 @@ import type { Route } from "./+types/room";
 import { useLoaderData, Link, useFetcher } from "react-router";
 import { RoomGrid } from "../components/RoomGrid";
 import { requireUserId } from "../common/services/auth.server";
-import {
-  getGroupMembersList,
-  getGroupById,
-  updateUserPosition,
-} from "~/common/services/group.server";
+import { getGroupById } from "~/common/services/group.server";
 import { useRoomStore } from "~/common/store/useRoomStore";
 import { useEffect, useState } from "react";
 import { getUser } from "~/common/services/user.server";
 import type { User } from "~/common/types/User";
 import { SaveConfirmDialog } from "~/components/SaveConfirmDialog";
+import {
+  getGroupMembersList,
+  updateUserPosition,
+} from "~/common/services/groupList.server";
 
 interface RoomUserInfo {
   user: User;

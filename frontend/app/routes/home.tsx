@@ -2,33 +2,175 @@ import { requireUserId } from "~/common/services/auth.server";
 import { GroupList } from "~/components/GroupList";
 import type { Route } from "../+types/root";
 import {
+  createGroup,
   getParticipatedGroup,
-  getParticipatedGroupId,
+  updateGroup,
 } from "~/common/services/group.server";
-import { useLoaderData, useNavigate } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import { LogoutConfirmDialog } from "~/components/LogoutConfirmDialog";
-import { useState } from "react";
+import { CreateGroupDialog } from "~/components/CreateGroupDialog";
+import { EditGroupDialog } from "~/components/EditGroupDialog";
+import { useState, useEffect } from "react";
+import {
+  addGroupList,
+  getParticipatedGroupId,
+} from "~/common/services/groupList.server";
+import type { Group } from "~/common/types/Group";
+import type { GroupMember } from "~/common/types/GroupMember";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await requireUserId(request);
   const participatedGroupIdList = await getParticipatedGroupId(userId);
 
   const groupList = await getParticipatedGroup(participatedGroupIdList);
-  return { groupList };
+  return { groupList, userId };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const userId = await requireUserId(request);
+  const formData = await request.formData();
+  const actionType = formData.get("actionType");
+
+  if (actionType === "update") {
+    const groupId = formData.get("groupId");
+    const name = formData.get("name");
+    const introduction = formData.get("introduction");
+
+    if (!groupId || !name || !introduction) {
+      throw new Response("Group ID, name and introduction are required", {
+        status: 400,
+      });
+    }
+
+    try {
+      await updateGroup(groupId as string, {
+        name: name as string,
+        introduction: introduction as string,
+      });
+
+      return { success: true };
+    } catch (error) {
+      throw new Response("Failed to update group: " + error, { status: 500 });
+    }
+  } else {
+    const name = formData.get("name");
+    const introduction = formData.get("introduction");
+
+    if (!name || !introduction) {
+      throw new Response("Group name and introduction are required", {
+        status: 400,
+      });
+    }
+
+    try {
+      const groupDataProps = {
+        name: name as string,
+        introduction: introduction as string,
+        makerUserId: userId,
+      } as Group;
+
+      const groupId = await createGroup(groupDataProps);
+
+      const addGroupListProps = {
+        groupId: groupId,
+        userId: userId,
+        role: 0,
+        position: {
+          x: 0,
+          y: 0,
+        },
+      } as GroupMember;
+      await addGroupList(addGroupListProps);
+
+      return { success: true };
+    } catch (error) {
+      throw new Response("Failed to create group: " + error, { status: 500 });
+    }
+  }
 }
 
 export default function Home() {
-  const groupList = useLoaderData<typeof loader>().groupList;
+  const { groupList, userId } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const [showEditGroupDialog, setShowEditGroupDialog] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const fetcher = useFetcher();
+
+  const isSubmitting = fetcher.state === "submitting";
+
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      setShowCreateGroupDialog(false);
+      setShowEditGroupDialog(false);
+      setEditingGroup(null);
+      window.location.reload();
+    }
+  }, [fetcher.data]);
 
   const handleLogoutConfirm = () => {
     navigate("/logout");
   };
 
+  const handleCreateGroup = (groupData: {
+    name: string;
+    introduction: string;
+  }) => {
+    fetcher.submit(
+      {
+        name: groupData.name,
+        introduction: groupData.introduction,
+        actionType: "create",
+      },
+      { method: "post" },
+    );
+  };
+
+  const handleEditGroup = (group: Group) => {
+    setEditingGroup(group);
+    setShowEditGroupDialog(true);
+  };
+
+  const handleUpdateGroup = (groupData: {
+    name: string;
+    introduction: string;
+  }) => {
+    if (!editingGroup) return;
+
+    fetcher.submit(
+      {
+        groupId: editingGroup.id,
+        name: groupData.name,
+        introduction: groupData.introduction,
+        actionType: "update",
+      },
+      { method: "post" },
+    );
+  };
+
   return (
     <div className="min-h-screen">
-      <div className="flex justify-end p-4">
+      <div className="flex justify-between p-4">
+        <button
+          onClick={() => setShowCreateGroupDialog(true)}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          新規グループ作成
+        </button>
         <button
           onClick={() => setShowLogoutDialog(true)}
           className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
@@ -50,12 +192,32 @@ export default function Home() {
         </button>
       </div>
       <div className="px-4">
-        <GroupList groupList={groupList} />
+        <GroupList
+          groupList={groupList}
+          onEdit={handleEditGroup}
+          currentUserId={userId}
+        />
       </div>
       <LogoutConfirmDialog
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}
         onConfirm={handleLogoutConfirm}
+      />
+      <CreateGroupDialog
+        isOpen={showCreateGroupDialog}
+        onClose={() => setShowCreateGroupDialog(false)}
+        onConfirm={handleCreateGroup}
+        isCreating={isSubmitting}
+      />
+      <EditGroupDialog
+        isOpen={showEditGroupDialog}
+        onClose={() => {
+          setShowEditGroupDialog(false);
+          setEditingGroup(null);
+        }}
+        onConfirm={handleUpdateGroup}
+        group={editingGroup}
+        isUpdating={isSubmitting}
       />
     </div>
   );

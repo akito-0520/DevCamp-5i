@@ -4,7 +4,7 @@ import { useRoomStore } from "../common/store/useRoomStore";
 import { UserProfile } from "./UserProfile";
 import { HackathonPanel } from "./HackathonPanel";
 
-const GRID_SIZE = 10;
+const GRID_SIZE = 6;
 
 interface RoomGridProps {
   groupName?: string;

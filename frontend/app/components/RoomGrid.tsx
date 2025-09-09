@@ -4,7 +4,7 @@ import { useRoomStore } from "../common/store/useRoomStore";
 import { UserProfile } from "./UserProfile";
 import { HackathonPanel } from "./HackathonPanel";
 
-const GRID_SIZE = 10;
+const GRID_SIZE = 6;
 
 interface RoomGridProps {
   groupName?: string;
@@ -15,7 +15,7 @@ export function RoomGrid({ groupName }: RoomGridProps) {
     useRoomStore();
 
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
-    null,
+    null
   );
   const [showHackathonPanel, setShowHackathonPanel] = React.useState(false);
 
@@ -58,14 +58,14 @@ export function RoomGrid({ groupName }: RoomGridProps) {
             isCurrentUser={room.userId === currentUserId}
             onClick={() => handleRoomClick(room.id)}
             teamColor={getTeamColor(room.teamId)}
-          />,
+          />
         );
       }
     }
     roomGrid.push(
       <div key={y} className="flex gap-2">
         {row}
-      </div>,
+      </div>
     );
   }
 

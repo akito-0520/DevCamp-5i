@@ -4,7 +4,7 @@ import {
   getRedirectResult,
   signOut,
 } from "firebase/auth";
-import { auth, googleProvider } from "../firebaseConfig";
+import { auth, googleProvider } from "../../firebaseConfig";
 
 export async function signInWithGoogle() {
   try {

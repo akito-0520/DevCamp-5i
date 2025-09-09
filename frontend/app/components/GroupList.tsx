@@ -10,13 +10,13 @@ export function GroupList({ groupList }: GroupListProps) {
     <div className="relative">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          参加済みのハッカソン一覧
+          参加済みのグループ一覧
         </h1>
       </div>
 
       <div>
         {groupList.length === 0 ? (
-          <p>参加済みのハッカソンは存在しません</p>
+          <p>参加済みのグループは存在しません</p>
         ) : (
           groupList.map((group: Group) => (
             <Link

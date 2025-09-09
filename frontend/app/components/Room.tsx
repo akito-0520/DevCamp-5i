@@ -1,5 +1,4 @@
-import type { Room as RoomType } from "../store/useRoomStore";
-
+import type { Room as RoomType } from "~/common/types/Room";
 interface RoomProps {
   room: RoomType;
   isCurrentUser: boolean;
@@ -23,21 +22,23 @@ export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
     >
       {user ? (
         <div className="flex flex-col items-center justify-center h-full p-2">
-          {user.discordAvatar ? (
-            <img
-              src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.discordAvatar}.png`}
-              alt={user.name}
-              className="w-10 h-10 rounded-full mb-1"
-            />
+          {user.discordAccount ? (
+            <div className="w-10 h-10 rounded-full bg-purple-500 mb-1 flex items-center justify-center">
+              <span className="text-white text-xs font-semibold">D</span>
+            </div>
           ) : (
             <div className="w-10 h-10 rounded-full bg-gray-400 dark:bg-gray-600 mb-1 flex items-center justify-center">
               <span className="text-white text-xs font-semibold">
-                {user.name.charAt(0).toUpperCase()}
+                {(user.nickName || user.firstname || "?")
+                  .charAt(0)
+                  .toUpperCase()}
               </span>
             </div>
           )}
           <span className="text-xs text-center truncate w-full font-medium">
-            {user.name}
+            {user.nickName ||
+              `${user.firstname} ${user.lastName}`.trim() ||
+              "Unknown"}
           </span>
         </div>
       ) : (

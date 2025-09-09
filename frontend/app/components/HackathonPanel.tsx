@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useRoomStore } from "../store/useRoomStore";
+import { useState } from "react";
+import { useRoomStore } from "../common/store/useRoomStore";
 
 interface HackathonPanelProps {
   onClose: () => void;
@@ -59,23 +59,15 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
     // 条件に合うユーザーを探す
     const eligibleUsers = Array.from(users.values()).filter((user) => {
       if (
-        user.grade &&
-        (user.grade < requirements.minGrade ||
-          user.grade > requirements.maxGrade)
+        user.schoolYear &&
+        (user.schoolYear < requirements.minGrade ||
+          user.schoolYear > requirements.maxGrade)
       ) {
         return false;
       }
 
-      if (
-        requiredSkills.length > 0 &&
-        !requiredSkills.some((skill) =>
-          user.skills.some((userSkill) =>
-            userSkill.toLowerCase().includes(skill.toLowerCase()),
-          ),
-        )
-      ) {
-        return false;
-      }
+      // 現在のUser型にはskillsプロパティがないため、スキルでのフィルタリングは省略
+      // TODO: スキル情報の管理方法を検討
 
       return true;
     });
@@ -83,7 +75,8 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
     // ユーザーが配置されている部屋を取得
     const occupiedRooms = rooms.filter(
       (room) =>
-        room.userId && eligibleUsers.some((user) => user.id === room.userId),
+        room.userId &&
+        eligibleUsers.some((user) => user.userId === room.userId),
     );
 
     const usedRooms = new Set<number>();
@@ -119,7 +112,6 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
       const color = colors[index % colors.length];
       const teamId = createTeam({
         name: `${hackathonName} Team ${index + 1}`,
-        hackathonId: `hackathon-${Date.now()}`,
         memberIds: team.memberIds,
         color,
       });
@@ -183,6 +175,8 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
               }
               placeholder="例: React, Python, 機械学習"
               className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
+              disabled
+              title="スキルフィルタリングは現在利用できません"
             />
           </div>
 

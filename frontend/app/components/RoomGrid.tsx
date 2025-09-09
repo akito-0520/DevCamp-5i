@@ -6,7 +6,11 @@ import { HackathonPanel } from "./HackathonPanel";
 
 const GRID_SIZE = 10;
 
-export function RoomGrid() {
+interface RoomGridProps {
+  groupName?: string;
+}
+
+export function RoomGrid({ groupName }: RoomGridProps) {
   const { rooms, currentUserId, initializeRooms, moveUserToRoom, teams } =
     useRoomStore();
 
@@ -68,9 +72,13 @@ export function RoomGrid() {
   return (
     <div className="relative">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          高専ハッカソンマッチング
-        </h1>
+        <div>
+          {groupName && (
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {groupName}
+            </h1>
+          )}
+        </div>
         <button
           onClick={() => setShowHackathonPanel(true)}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"

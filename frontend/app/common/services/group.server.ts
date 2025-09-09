@@ -5,6 +5,9 @@ import {
   where,
   getDocs,
   documentId,
+  doc,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import type { Group } from "../types/Group";
 import type { GroupMember } from "../types/GroupMember";
@@ -60,5 +63,30 @@ export async function getGroupMembersList(groupId: string) {
       role: data.role,
       userId: data.user_id,
     } as GroupMember;
+  });
+}
+
+export async function getGroupById(groupId: string) {
+  const ref = doc(db, "group", groupId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return null;
+
+  const data = snap.data();
+  return {
+    id: snap.id,
+    name: data.group_name,
+    introduction: data.group_introduction,
+    makerUserId: data.maker_user_id,
+  } as Group;
+}
+
+export async function updateUserPosition(
+  groupListId: string,
+  position: { x: number; y: number },
+) {
+  const q = doc(db, "group_list", groupListId);
+  await updateDoc(q, {
+    position: position,
   });
 }

@@ -1,16 +1,15 @@
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { FieldPath } from "firebase-admin/firestore";
 
 admin.initializeApp();
 const db = admin.firestore();
 
 // 位置情報(例: 1205)を座標(例: {x: 12, y: 5})に変換するヘルパー関数
-const parsePosition = (position: number) => {
-    if (typeof position !== 'number') return { x: 0, y: 0 };
-    return {
-        x: Math.floor(position / 100),
-        y: position % 100,
-    };
+const parsePosition = (position: {x: number, y: number} | undefined) => {
+    if (position && typeof position.x === 'number' && typeof position.y === 'number') {
+        return position;
+    }
+    return { x: 0, y: 0 }; // デフォルトの座標
 };
 
 // 2つの座標間のマンハッタン距離を計算するヘルパー関数
@@ -18,9 +17,9 @@ const calculateDistance = (pos1: {x: number, y: number}, pos2: {x: number, y: nu
     return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
 };
 
-export const getSpecificData = functions
-    .region("asia-northeast1")
-    .https.onRequest(async (request, response) => {
+import {onRequest} from "firebase-functions/v2/https";
+
+export const getSpecificData = onRequest({region: "asia-northeast1"}, async (request, response) => {
       // 例: /myDynamicHttpFunction?hackathon_id=products&user_id=sample@sample.com
       const hackathon_id = request.query.hackathon_id; // "products" が入る
       const user_id = request.query.user_id;
@@ -31,7 +30,7 @@ export const getSpecificData = functions
         console.log("ハッカソンリストからデータ取得開始");
         const snapshot = await tasksCollectionRef
             .where("hackathon_id", "==", hackathon_id)
-            .where("is_invite_accept", "==", "true")
+            .where("is_invite_accept", "==", true)
             .get();
 
         console.log("ハッカソンリストからデータ取得終了");
@@ -40,10 +39,16 @@ export const getSpecificData = functions
           response.status(404).send("該当するハッカソンがありません");
           return;
         }
+        interface HackathonTask {
+          group_id: string;
+          user_id: string;
+          role: string;
+          // 他にもフィールドがあればここに追加
+        }
 
         // 取得したドキュメントから配列を作成
         const completedTasks = snapshot.docs.map(doc => {
-          return { id: doc.id, ...doc.data() };
+          return { id: doc.id, ...doc.data()  as HackathonTask  };
         });
         console.log("ハッカソンリストからデータ配列化完了");
         //招待を承認してくれた人数
@@ -54,7 +59,7 @@ export const getSpecificData = functions
         // 1. 'hackathon'コレクションから該当ドキュメントを検索
         const hackathonCollectionRef = db.collection("hackathon");
         const hackathonSnapshot = await hackathonCollectionRef
-            .where("hackathon_id", "==", hackathon_id)
+            .where(FieldPath.documentId(), "==", hackathon_id)
             .get();
 
         console.log("ハッカソンからデータ取得終了");
@@ -74,16 +79,18 @@ export const getSpecificData = functions
         const team_size_lower = hackathonData.team_size_lower;
         const backend_number = hackathonData.backend_number;
         const frontend_number = hackathonData.frontend_number;
+
+        const targetTeamSize = team_size_upper || team_size;
         console.log("代入完了");
 
-        if (acceptCount == 0 || (team_size != acceptCount && !team_size_lower && !team_size_upper) || (team_size_lower && team_size_lower > acceptCount)){
+        if (acceptCount == 0 || (team_size_lower && team_size_lower > acceptCount)){
             //参加人数が足りないとき
             console.log("参加人数が足りませんでした");
             response.status(200).send("参加人数が足りませんでした");
             return;
         }
         console.log("人数足りないわけではない");
-        if ((team_size == acceptCount && !team_size_lower && !team_size_upper) || (team_size_upper && !team_size_lower && team_size_upper >= acceptCount) || (team_size_lower && !team_size_upper && team_size_lower <= acceptCount) || (team_size_lower && team_size_upper && team_size_lower <= acceptCount && team_size_upper >= acceptCount)){
+        if (team_size == acceptCount || (team_size_upper && !team_size_lower && team_size_upper >= acceptCount) || (team_size_lower && !team_size_upper && team_size_lower <= acceptCount) || (team_size_lower && team_size_upper && team_size_lower <= acceptCount && team_size_upper >= acceptCount)){
             //参加人数が適切な場合
             // 1. バッチ処理を初期化
             console.log("人数は適切");
@@ -113,7 +120,7 @@ export const getSpecificData = functions
             console.log("グループリストからデータ取得開始");
             const currentUserGroupInfoSnap = await db.collection("group_list")
                 .where("group_id", "==", group_id)
-                .where("mail_adress", "==", user_id)
+                .where("user_id", "==", user_id)
                 .limit(1).get();
             if (currentUserGroupInfoSnap.empty) {
                 response.status(404).send("基準ユーザーの位置情報が見つかりません。");
@@ -128,11 +135,12 @@ export const getSpecificData = functions
             const participantsWithDistance = await Promise.all(completedTasks.map(async (task) => {
                 const groupInfoSnap = await db.collection("group_list")
                     .where("group_id", "==", group_id)
-                    .where("mail_adress", "==", task.user_id)
+                    .where("user_id", "==", task.user_id)
                     .limit(1).get();
-                const position = groupInfoSnap.empty ? 0 : groupInfoSnap.docs[0].data().position;
+                const position = groupInfoSnap.empty ? undefined : groupInfoSnap.docs[0].data().position;
                 const coords = parsePosition(position);
                 const distance = calculateDistance(currentUserCoords, coords);
+                
                 return { ...task, distance, role: task.role }; // roleはhackathon_listにあると仮定
             }));
             console.log("全参加者の位置情報を並行取得し、距離を計算終了");

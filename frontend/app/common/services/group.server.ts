@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   addDoc,
+  updateDoc,
 } from "firebase/firestore";
 import type { Group } from "../types/Group";
 
@@ -55,4 +56,18 @@ export async function createGroup(group: Group) {
     maker_user_id: group.makerUserId,
   });
   return docRef.id;
+}
+
+export async function updateGroup(groupId: string, group: Partial<Group>) {
+  const ref = doc(db, "group", groupId);
+  const updateData: any = {};
+
+  if (group.name !== undefined) {
+    updateData.group_name = group.name;
+  }
+  if (group.introduction !== undefined) {
+    updateData.group_introduction = group.introduction;
+  }
+
+  await updateDoc(ref, updateData);
 }

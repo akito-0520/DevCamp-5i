@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Room } from "./Room";
-import { useRoomStore } from "../store/useRoomStore";
+import { useRoomStore } from "../common/store/useRoomStore";
 import { UserProfile } from "./UserProfile";
 import { HackathonPanel } from "./HackathonPanel";
 
@@ -25,13 +25,13 @@ export function RoomGrid() {
     const room = rooms.find((r) => r.id === roomId);
 
     if (room?.user) {
-      if (room.user.id === currentUserId) {
+      if (room.user.userId === currentUserId) {
         setSelectedUserId(currentUserId);
       } else {
-        setSelectedUserId(room.user.id);
+        setSelectedUserId(room.user.userId);
       }
-    } else if (currentUserId) {
-      moveUserToRoom(currentUserId, roomId);
+    } else if (currentUserId && room) {
+      moveUserToRoom(currentUserId, room.x, room.y);
     }
   };
 

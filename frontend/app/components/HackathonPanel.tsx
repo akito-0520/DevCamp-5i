@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useRoomStore } from "../store/useRoomStore";
+import { useRoomStore } from "../common/store/useRoomStore";
 
 interface HackathonPanelProps {
   onClose: () => void;

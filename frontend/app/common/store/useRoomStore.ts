@@ -1,60 +1,7 @@
 import { create } from "zustand";
-
-export interface User {
-  id: string;
-  name: string;
-  discordId: string;
-  discordAvatar?: string;
-  skills: string[];
-  school?: string;
-  grade?: number;
-  email: string;
-  isSkillsPublic: boolean;
-}
-
-export interface Room {
-  id: number;
-  x: number;
-  y: number;
-  userId?: string;
-  user?: User;
-  teamId?: string;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  hackathonId: string;
-  memberIds: string[];
-  color: string;
-}
-
-export interface Hackathon {
-  id: string;
-  name: string;
-  requirements?: {
-    skills?: string[];
-    minGrade?: number;
-    maxGrade?: number;
-    schoolTypes?: string[];
-  };
-}
-
-interface RoomStore {
-  rooms: Room[];
-  users: Map<string, User>;
-  teams: Map<string, Team>;
-  hackathons: Map<string, Hackathon>;
-  currentUserId: string | null;
-
-  initializeRooms: (gridSize: number) => void;
-  moveUserToRoom: (userId: string, roomId: number) => void;
-  updateUser: (userId: string, userData: Partial<User>) => void;
-  createTeam: (teamData: Omit<Team, "id">) => string;
-  assignTeamToRooms: (teamId: string, roomIds: number[]) => void;
-  setCurrentUser: (userId: string) => void;
-  addUser: (user: User) => void;
-}
+import type { Room } from "~/common/types/Room";
+import type { Team } from "~/common/types/Team";
+import type { RoomStore } from "../types/RoomStore";
 
 export const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
@@ -74,13 +21,13 @@ export const useRoomStore = create<RoomStore>((set) => ({
     set({ rooms });
   },
 
-  moveUserToRoom: (userId, roomId) => {
+  moveUserToRoom: (userId, x, y) => {
     set((state) => {
       const rooms = state.rooms.map((room) => {
         if (room.userId === userId) {
           return { ...room, userId: undefined, user: undefined };
         }
-        if (room.id === roomId) {
+        if (room.x === x && room.y === y) {
           const user = state.users.get(userId);
           return { ...room, userId, user };
         }
@@ -131,7 +78,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
   addUser: (user) => {
     set((state) => {
       const users = new Map(state.users);
-      users.set(user.id, user);
+      users.set(user.userId, user);
       return { users };
     });
   },

@@ -1,5 +1,7 @@
 import * as admin from "firebase-admin";
-import {onDocumentUpdated} from "firebase-functions/v2/firestore";
+// 必要なトリガーを両方インポートする
+import {onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore"; 
+import * as logger from "firebase-functions/logger";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -21,6 +23,7 @@ const calculateDistance = (pos1: {x: number, y: number}, pos2: {
 
 export const onHackathonDeadline =
     onDocumentUpdated("hackathon/{hackathonId}", async (event) => {
+      console.log("本格募集開始")
       // 更新前後のデータを取得
       const dataBefore = event.data?.before.data();
       const dataAfter = event.data?.after.data();
@@ -204,3 +207,68 @@ export const onHackathonDeadline =
         return;
       }
     });
+
+export const onNewOrder = onDocumentCreated("hackathon/{orderId}", async (event) => {
+  // 1. 新しく作成されたドキュメントのデータを取得します。
+  console.log("hackathon_list作成開始")
+  const eventData = event.data;
+  if (!eventData) {
+    console.log("ドキュメントデータが存在しません。");
+    return;
+  }
+  const data = eventData.data();
+  const groupId = data.group_id; // ドキュメントに'userName'フィールドがあると仮定
+  const hackathonId = event.params.orderId;
+  const ownerId = data.owner;
+
+  try {
+    console.log("グループリスト取得開始")
+    const tasksCollectionRef = db.collection("group_list");
+    const snapshot = 
+      await tasksCollectionRef
+          .where("group_id", "==", groupId)
+          .get();
+
+    console.log("グループリストからデータ取得終了");
+    if (snapshot.empty) {
+      console.log("Accepted members not found for this hackathon.");
+      return;
+    }
+
+    console.log("グループリストからデータ配列化完了");
+
+    // 3. バッチ処理を初期化
+    const batch = db.batch();
+
+    // 4. 取得した各メンバーをhackathon_listに追加する準備
+    snapshot.docs.forEach((memberDoc) => {
+      const memberData = memberDoc.data();
+      
+      if (memberData.user_id !== ownerId) {
+        const newHackathonListDocRef = db.collection("hackathon_list").doc();
+        
+        const newEntry = {
+          hackathon_id: hackathonId,
+          group_id: groupId,
+          user_id: memberData.user_id,
+          is_invite_accept: false,
+          is_join: false,
+        };
+        
+        batch.set(newHackathonListDocRef, newEntry);
+      }
+    });
+
+    // 5. バッチ処理をまとめて実行
+    await batch.commit();
+
+    logger.info(`Successfully added ${snapshot.size} members from group ${groupId} to hackathon_list for hackathon ${hackathonId}.`);
+
+  } catch (error) {
+    console.error("ドキュメントの取得中にエラーが発生しました:", error);
+  }
+  //hackathonlist
+
+
+  return; // 処理を終了
+});

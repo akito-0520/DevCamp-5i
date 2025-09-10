@@ -20,9 +20,7 @@ export function RoomGrid({ groupName }: RoomGridProps) {
   const [showHackathonPanel, setShowHackathonPanel] = React.useState(false);
 
   useEffect(() => {
-    if (rooms.length === 0) {
-      initializeRooms(GRID_SIZE);
-    }
+    initializeRooms(GRID_SIZE);
   }, []);
 
   const handleRoomClick = (roomId: number) => {

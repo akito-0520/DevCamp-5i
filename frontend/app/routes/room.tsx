@@ -12,7 +12,11 @@ import {
   getGroupMembersList,
   updateUserPosition,
 } from "~/common/services/groupList.server";
-import { createHackathon } from "~/common/services/hackathon.server";
+import {
+  createHackathon,
+  getHackathons,
+} from "~/common/services/hackathon.server";
+import { getUserHackathonLists } from "~/common/services/hackathonList.server";
 
 interface RoomUserInfo {
   user: User;
@@ -49,7 +53,24 @@ export async function loader({ request }: Route.LoaderArgs) {
     }),
   );
 
-  return { userId, roomUsersInfo, groupMembers, group };
+  // ユーザーが作成したハッカソン一覧を取得
+  const userHackathonLists = await getUserHackathonLists(userId);
+
+  const groupHackathons = await getHackathons(groupId);
+
+  const thisGroupHackathonLists = groupHackathons.filter((groupHackathon) => {
+    return userHackathonLists.some(
+      (invitation) => invitation.hackathonId === groupHackathon.hackathonId,
+    );
+  });
+
+  return {
+    userId,
+    roomUsersInfo,
+    groupMembers,
+    group,
+    thisGroupHackathonLists,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -77,9 +98,10 @@ export async function action({ request }: Route.ActionArgs) {
       await createHackathon(hackathonData);
       return { success: true };
     } catch (error) {
-      throw new Response("Failed to create hackathon: " + error, {
-        status: 500,
-      });
+      throw new Response(
+        `Failed to create hackathon: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
     }
   } else if (actionType === "saveConfirm") {
     // 既存の位置更新処理
@@ -124,8 +146,13 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Group() {
-  const { userId, roomUsersInfo, groupMembers, group } =
-    useLoaderData<typeof loader>();
+  const {
+    userId,
+    roomUsersInfo,
+    groupMembers,
+    group,
+    thisGroupHackathonLists,
+  } = useLoaderData<typeof loader>();
   const { moveUserToRoom, setCurrentUser, addUser, rooms } = useRoomStore();
   const fetcher = useFetcher();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -270,7 +297,11 @@ export default function Group() {
           </button>
         </div>
       </div>
-      <RoomGrid groupName={group.name} />
+      <RoomGrid
+        groupName={group.name}
+        hackathons={thisGroupHackathonLists}
+        groupId={group.id}
+      />
       <SaveConfirmDialog
         isOpen={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}

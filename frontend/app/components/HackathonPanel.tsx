@@ -6,17 +6,23 @@ import { useFetcher } from "react-router";
 interface HackathonPanelProps {
   onClose: () => void;
   currentUser: User;
+  groupId: string;
 }
 
-export function HackathonPanel({ onClose, currentUser }: HackathonPanelProps) {
+export function HackathonPanel({
+  onClose,
+  currentUser,
+  groupId,
+}: HackathonPanelProps) {
   const fetcher = useFetcher();
   const [hackathonData, setHackathonData] = useState<Partial<Hackathon>>({
+    name: "",
+    groupId: groupId,
     ownerId: currentUser.userId,
     startDate: new Date(),
     finishDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     isDeadline: false,
-    isFinish: false,
-    name: "",
+    teamSize: 3,
   });
   const [showRecruitmentInfo, setShowRecruitmentInfo] = useState(true);
   const [useAdvancedMode, setUseAdvancedMode] = useState(false);
@@ -44,7 +50,6 @@ export function HackathonPanel({ onClose, currentUser }: HackathonPanelProps) {
       finalData.teamSize = undefined;
     }
 
-    // FormDataを使用してサーバーに送信
     const formData = new FormData();
     formData.append("actionType", "createHackathon");
     formData.append("hackathonData", JSON.stringify(finalData));
@@ -323,11 +328,13 @@ export function HackathonPanel({ onClose, currentUser }: HackathonPanelProps) {
                     <input
                       type="number"
                       min="0"
-                      value={hackathonData.frontendNumber}
+                      value={hackathonData.frontendNumber || ""}
                       onChange={(e) =>
                         setHackathonData({
                           ...hackathonData,
-                          frontendNumber: parseInt(e.target.value),
+                          frontendNumber: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
                         })
                       }
                       className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
@@ -340,11 +347,13 @@ export function HackathonPanel({ onClose, currentUser }: HackathonPanelProps) {
                     <input
                       type="number"
                       min="0"
-                      value={hackathonData.backendNumber}
+                      value={hackathonData.backendNumber || ""}
                       onChange={(e) =>
                         setHackathonData({
                           ...hackathonData,
-                          backendNumber: parseInt(e.target.value),
+                          backendNumber: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
                         })
                       }
                       className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"

@@ -1,16 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Room } from "./Room";
 import { useRoomStore } from "../common/store/useRoomStore";
 import { UserProfile } from "./UserProfile";
 import { HackathonPanel } from "./HackathonPanel";
+import { HackathonList } from "./HackathonList";
+import type { Hackathon } from "~/common/types/Hackathon";
 
 const GRID_SIZE = 6;
 
 interface RoomGridProps {
   groupName?: string;
+  groupId: string;
+  hackathons?: Hackathon[];
 }
 
-export function RoomGrid({ groupName }: RoomGridProps) {
+export function RoomGrid({
+  groupName,
+  groupId,
+  hackathons = [],
+}: RoomGridProps) {
   const {
     rooms,
     currentUserId,
@@ -20,10 +28,8 @@ export function RoomGrid({ groupName }: RoomGridProps) {
     users,
   } = useRoomStore();
 
-  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
-    null,
-  );
-  const [showHackathonPanel, setShowHackathonPanel] = React.useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showHackathonPanel, setShowHackathonPanel] = useState(false);
 
   useEffect(() => {
     initializeRooms(GRID_SIZE);
@@ -83,12 +89,14 @@ export function RoomGrid({ groupName }: RoomGridProps) {
             </h1>
           )}
         </div>
-        <button
-          onClick={() => setShowHackathonPanel(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          ハッカソンメンバーを募集
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowHackathonPanel(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            ハッカソンメンバーを募集
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -112,8 +120,14 @@ export function RoomGrid({ groupName }: RoomGridProps) {
         </div>
       </div>
 
-      <div className="inline-block p-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
-        <div className="flex flex-col gap-2">{roomGrid}</div>
+      <div className="flex gap-6">
+        <div className="inline-block p-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
+          <div className="flex flex-col gap-2">{roomGrid}</div>
+        </div>
+
+        <div className="w-96">
+          <HackathonList hackathons={hackathons} />
+        </div>
       </div>
 
       {selectedUserId && (
@@ -127,6 +141,7 @@ export function RoomGrid({ groupName }: RoomGridProps) {
         <HackathonPanel
           onClose={() => setShowHackathonPanel(false)}
           currentUser={users.get(currentUserId)!}
+          groupId={groupId}
         />
       )}
     </div>

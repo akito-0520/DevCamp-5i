@@ -1,10 +1,11 @@
 export type Hackathon = {
   hackathonId: string;
+  name: string;
+  groupId: string;
   ownerId: string;
   startDate: Date;
   finishDate: Date;
   isDeadline: boolean;
-  isFinish: boolean;
   numberOfTeams?: number;
   numberOfTeamsUpper?: number;
   numberOfTeamsLower?: number;
@@ -12,7 +13,6 @@ export type Hackathon = {
   teamSizeUpper?: number;
   teamSizeLower?: number;
   URL?: string;
-  name: string;
   backendNumber?: number;
   frontendNumber?: number;
 };

@@ -11,8 +11,14 @@ interface RoomGridProps {
 }
 
 export function RoomGrid({ groupName }: RoomGridProps) {
-  const { rooms, currentUserId, initializeRooms, moveUserToRoom, teams } =
-    useRoomStore();
+  const {
+    rooms,
+    currentUserId,
+    initializeRooms,
+    moveUserToRoom,
+    teams,
+    users,
+  } = useRoomStore();
 
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
     null,
@@ -81,7 +87,7 @@ export function RoomGrid({ groupName }: RoomGridProps) {
           onClick={() => setShowHackathonPanel(true)}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
-          ハッカソン管理
+          ハッカソンメンバーを募集
         </button>
       </div>
 
@@ -117,8 +123,11 @@ export function RoomGrid({ groupName }: RoomGridProps) {
         />
       )}
 
-      {showHackathonPanel && (
-        <HackathonPanel onClose={() => setShowHackathonPanel(false)} />
+      {showHackathonPanel && currentUserId && users.get(currentUserId) && (
+        <HackathonPanel
+          onClose={() => setShowHackathonPanel(false)}
+          currentUser={users.get(currentUserId)!}
+        />
       )}
     </div>
   );

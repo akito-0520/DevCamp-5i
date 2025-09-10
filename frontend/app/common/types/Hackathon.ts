@@ -3,6 +3,7 @@ export type Hackathon = {
   ownerId: string;
   startDate: Date;
   finishDate: Date;
+  isDeadline: boolean;
   isFinish: boolean;
   numberOfTeams?: number;
   numberOfTeamsUpper?: number;

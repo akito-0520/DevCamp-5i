@@ -1,133 +1,74 @@
-import { useState } from "react";
-import { useRoomStore } from "../common/store/useRoomStore";
+import { useState, useEffect } from "react";
+import type { User } from "../common/types/User";
+import type { Hackathon } from "~/common/types/Hackathon";
+import { useFetcher } from "react-router";
 
 interface HackathonPanelProps {
   onClose: () => void;
+  currentUser: User;
 }
 
-export function HackathonPanel({ onClose }: HackathonPanelProps) {
-  const { rooms, users, createTeam, assignTeamToRooms } = useRoomStore();
-
-  const [hackathonName, setHackathonName] = useState("");
-  const [requirements, setRequirements] = useState({
-    skills: "",
-    minGrade: 1,
-    maxGrade: 5,
-    teamSize: 3,
+export function HackathonPanel({ onClose, currentUser }: HackathonPanelProps) {
+  const fetcher = useFetcher();
+  const [hackathonData, setHackathonData] = useState<Partial<Hackathon>>({
+    ownerId: currentUser.userId,
+    startDate: new Date(),
+    finishDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    isDeadline: false,
+    isFinish: false,
+    name: "",
   });
+  const [showRecruitmentInfo, setShowRecruitmentInfo] = useState(true);
+  const [useAdvancedMode, setUseAdvancedMode] = useState(false);
 
-  const findAdjacentRooms = (startRoomId: number, count: number): number[] => {
-    const visited = new Set<number>();
-    const queue = [startRoomId];
-    const result: number[] = [];
+  const isSubmitting = fetcher.state === "submitting";
 
-    while (queue.length > 0 && result.length < count) {
-      const currentId = queue.shift()!;
-      if (visited.has(currentId)) continue;
+  // 作成成功後に閉じる
+  useEffect(() => {
+    if (fetcher.state === "idle" && fetcher.data?.success) {
+      onClose();
+    }
+  }, [fetcher.state, fetcher.data, onClose]);
 
-      visited.add(currentId);
-      const currentRoom = rooms.find((r) => r.id === currentId);
-      if (!currentRoom) continue;
+  const handleCreateRecruitment = () => {
+    if (!hackathonData.name) return;
 
-      if (currentRoom.userId && !result.includes(currentId)) {
-        result.push(currentId);
-      }
-
-      // 隣接する部屋を探す
-      const neighbors = rooms.filter((r) => {
-        const dx = Math.abs(r.x - currentRoom.x);
-        const dy = Math.abs(r.y - currentRoom.y);
-        return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
-      });
-
-      neighbors.forEach((n) => {
-        if (!visited.has(n.id)) {
-          queue.push(n.id);
-        }
-      });
+    // モードに応じて適切な値を設定
+    const finalData = { ...hackathonData };
+    if (!useAdvancedMode) {
+      // 推奨値モードの場合、最小・最大をundefinedに
+      finalData.teamSizeLower = undefined;
+      finalData.teamSizeUpper = undefined;
+    } else {
+      // 詳細モードの場合、推奨値をundefinedに
+      finalData.teamSize = undefined;
     }
 
-    return result;
+    // FormDataを使用してサーバーに送信
+    const formData = new FormData();
+    formData.append("actionType", "createHackathon");
+    formData.append("hackathonData", JSON.stringify(finalData));
+
+    fetcher.submit(formData, { method: "post" });
   };
 
-  const createTeams = () => {
-    const requiredSkills = requirements.skills
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s);
+  const formatDate = (date: Date | undefined): string => {
+    if (!date) return "";
+    return date.toISOString().split("T")[0];
+  };
 
-    // 条件に合うユーザーを探す
-    const eligibleUsers = Array.from(users.values()).filter((user) => {
-      if (
-        user.schoolYear &&
-        (user.schoolYear < requirements.minGrade ||
-          user.schoolYear > requirements.maxGrade)
-      ) {
-        return false;
-      }
-
-      // 現在のUser型にはskillsプロパティがないため、スキルでのフィルタリングは省略
-      // TODO: スキル情報の管理方法を検討
-
-      return true;
-    });
-
-    // ユーザーが配置されている部屋を取得
-    const occupiedRooms = rooms.filter(
-      (room) =>
-        room.userId &&
-        eligibleUsers.some((user) => user.userId === room.userId),
-    );
-
-    const usedRooms = new Set<number>();
-    const teams: { roomIds: number[]; memberIds: string[] }[] = [];
-
-    // 隣接する部屋でチームを作成
-    occupiedRooms.forEach((room) => {
-      if (usedRooms.has(room.id)) return;
-
-      const adjacentRooms = findAdjacentRooms(room.id, requirements.teamSize);
-      if (adjacentRooms.length === requirements.teamSize) {
-        const memberIds = adjacentRooms
-          .map((roomId) => rooms.find((r) => r.id === roomId)?.userId)
-          .filter((id): id is string => id !== undefined);
-
-        teams.push({ roomIds: adjacentRooms, memberIds });
-        adjacentRooms.forEach((roomId) => usedRooms.add(roomId));
-      }
-    });
-
-    // チームを作成して色を割り当て
-    const colors = [
-      "red",
-      "blue",
-      "green",
-      "yellow",
-      "purple",
-      "orange",
-      "pink",
-      "indigo",
-    ];
-    teams.forEach((team, index) => {
-      const color = colors[index % colors.length];
-      const teamId = createTeam({
-        name: `${hackathonName} Team ${index + 1}`,
-        memberIds: team.memberIds,
-        color,
-      });
-      assignTeamToRooms(teamId, team.roomIds);
-    });
-
-    alert(`${teams.length}チームが作成されました！`);
-    onClose();
+  const getTodayString = (): string => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split("T")[0];
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full">
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            ハッカソンチーム編成
+            ハッカソンメンバーを募集
           </h2>
           <button
             onClick={onClose}
@@ -149,103 +90,300 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
           </button>
         </div>
 
+        {showRecruitmentInfo && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <div className="flex items-start">
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  主催者情報
+                </h3>
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <p>
+                    <span className="font-medium">名前:</span>{" "}
+                    {currentUser.nickName ||
+                      `${currentUser.firstname} ${currentUser.lastName}`}
+                  </p>
+                  <p>
+                    <span className="font-medium">学校:</span>{" "}
+                    {currentUser.schoolName}
+                  </p>
+                  <p>
+                    <span className="font-medium">学年:</span>{" "}
+                    {currentUser.schoolYear}年
+                  </p>
+                  <p>
+                    <span className="font-medium">学科:</span>{" "}
+                    {currentUser.schoolDepartment}
+                  </p>
+                  <p>
+                    <span className="font-medium">Discord:</span>{" "}
+                    {currentUser.discordAccount}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRecruitmentInfo(false)}
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              ハッカソン名
+              ハッカソン名 *
             </label>
             <input
               type="text"
-              value={hackathonName}
-              onChange={(e) => setHackathonName(e.target.value)}
-              placeholder="例: 高専プロコン2025"
-              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              必要スキル（カンマ区切り）
-            </label>
-            <input
-              type="text"
-              value={requirements.skills}
+              value={hackathonData.name}
               onChange={(e) =>
-                setRequirements({ ...requirements, skills: e.target.value })
+                setHackathonData({ ...hackathonData, name: e.target.value })
               }
-              placeholder="例: React, Python, 機械学習"
-              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
-              disabled
-              title="スキルフィルタリングは現在利用できません"
+              placeholder="例: 高専プロコン2025"
+              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                最小学年
+                開始日
               </label>
-              <select
-                value={requirements.minGrade}
+              <input
+                type="date"
+                value={formatDate(hackathonData.startDate)}
+                min={getTodayString()}
                 onChange={(e) =>
-                  setRequirements({
-                    ...requirements,
-                    minGrade: parseInt(e.target.value),
+                  setHackathonData({
+                    ...hackathonData,
+                    startDate: new Date(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
-              >
-                {[1, 2, 3, 4, 5].map((g) => (
-                  <option key={g} value={g}>
-                    {g}年
-                  </option>
-                ))}
-              </select>
+                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+              />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                最大学年
+                終了日
               </label>
-              <select
-                value={requirements.maxGrade}
+              <input
+                type="date"
+                value={formatDate(hackathonData.finishDate)}
+                min={formatDate(hackathonData.startDate) || getTodayString()}
                 onChange={(e) =>
-                  setRequirements({
-                    ...requirements,
-                    maxGrade: parseInt(e.target.value),
+                  setHackathonData({
+                    ...hackathonData,
+                    finishDate: new Date(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
-              >
-                {[1, 2, 3, 4, 5].map((g) => (
-                  <option key={g} value={g}>
-                    {g}年
-                  </option>
-                ))}
-              </select>
+                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+              />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              チームサイズ
+              ハッカソンURL（任意）
             </label>
-            <select
-              value={requirements.teamSize}
+            <input
+              type="url"
+              value={hackathonData.URL}
               onChange={(e) =>
-                setRequirements({
-                  ...requirements,
-                  teamSize: parseInt(e.target.value),
-                })
+                setHackathonData({ ...hackathonData, URL: e.target.value })
               }
-              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded"
-            >
-              {[2, 3, 4, 5].map((size) => (
-                <option key={size} value={size}>
-                  {size}人
-                </option>
-              ))}
-            </select>
+              placeholder="https://example.com/hackathon"
+              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                チーム構成
+              </h3>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={useAdvancedMode}
+                  onChange={(e) => {
+                    setUseAdvancedMode(e.target.checked);
+                    if (e.target.checked) {
+                      // 詳細モードに切り替え時、最小・最大に推奨値を基に初期値を設定
+                      if (hackathonData.teamSize) {
+                        setHackathonData({
+                          ...hackathonData,
+                          teamSizeLower: Math.max(
+                            1,
+                            hackathonData.teamSize - 1,
+                          ),
+                          teamSizeUpper: hackathonData.teamSize + 2,
+                        });
+                      }
+                    }
+                  }}
+                  className="rounded text-purple-600"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  最小・最大を個別に設定
+                </span>
+              </label>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  チーム人数
+                </label>
+                {useAdvancedMode ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-600 dark:text-gray-400">
+                        最小人数
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={hackathonData.teamSizeLower}
+                        onChange={(e) =>
+                          setHackathonData({
+                            ...hackathonData,
+                            teamSizeLower: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600 dark:text-gray-400">
+                        最大人数
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={hackathonData.teamSizeUpper}
+                        onChange={(e) =>
+                          setHackathonData({
+                            ...hackathonData,
+                            teamSizeUpper: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      最小・最大を指定
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={hackathonData.teamSize}
+                      onChange={(e) =>
+                        setHackathonData({
+                          ...hackathonData,
+                          teamSize: parseInt(e.target.value),
+                        })
+                      }
+                      placeholder="推奨人数"
+                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      人数を指定
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  必要な開発者数（任意）
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 dark:text-gray-400">
+                      フロントエンド開発者
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={hackathonData.frontendNumber}
+                      onChange={(e) =>
+                        setHackathonData({
+                          ...hackathonData,
+                          frontendNumber: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 dark:text-gray-400">
+                      バックエンド開発者
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={hackathonData.backendNumber}
+                      onChange={(e) =>
+                        setHackathonData({
+                          ...hackathonData,
+                          backendNumber: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
+              募集概要
+            </h4>
+            <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
+              <p>
+                • 期間: {formatDate(hackathonData.startDate)} 〜{" "}
+                {formatDate(hackathonData.finishDate)}
+              </p>
+              {useAdvancedMode ? (
+                <>
+                  <p>
+                    • チーム人数: {hackathonData.teamSizeLower}〜
+                    {hackathonData.teamSizeUpper}人
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>• チーム人数: {hackathonData.teamSize}人</p>
+                </>
+              )}
+              {(hackathonData.frontendNumber ||
+                hackathonData.backendNumber) && (
+                <p>
+                  • 必要スキル: フロントエンド{hackathonData.frontendNumber}
+                  人、バックエンド{hackathonData.backendNumber}人
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 mt-6">
@@ -256,11 +394,11 @@ export function HackathonPanel({ onClose }: HackathonPanelProps) {
               キャンセル
             </button>
             <button
-              onClick={createTeams}
-              disabled={!hackathonName}
+              onClick={handleCreateRecruitment}
+              disabled={!hackathonData.name || isSubmitting}
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              チーム作成
+              {isSubmitting ? "作成中..." : "募集を開始"}
             </button>
           </div>
         </div>

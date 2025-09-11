@@ -33,7 +33,33 @@ export async function action({ request }: Route.ActionArgs) {
       const result = await verifyIdToken(idToken);
 
       if (result.success && result.user) {
+        const { getUser, createUser } = await import(
+          "../common/services/user.server"
+        );
         const userId = createUserIdFromFirebase(result.user.uid);
+
+        // Check if user exists
+        const existingUser = await getUser(userId);
+
+        if (!existingUser) {
+          // Create new user for first-time Google login
+          const [firstName, ...lastNameParts] = (
+            result.user.displayName || ""
+          ).split(" ");
+          await createUser({
+            userId: userId,
+            firstName: firstName || "",
+            lastName: lastNameParts.join(" ") || "",
+            nickName: "",
+            userCategory: 0,
+            discordAccount: "",
+            schoolCategory: 0,
+            schoolName: "",
+            schoolYear: 0,
+            schoolDepartment: "",
+          });
+        }
+
         return createUserSession(userId, "/home");
       }
 
@@ -96,7 +122,6 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
       : new URLSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? undefined;
 
-  // リダイレクトからの結果をチェック
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -129,14 +154,12 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
   const handleGoogleLogin = async () => {
     setIsLoadingGoogle(true);
 
-    // 動的インポートでクライアントサイドのみで実行
     const { signInWithGoogle } = await import(
       "../common/services/firebase-auth.client"
     );
     const result = await signInWithGoogle();
 
     if (result.success && result.user) {
-      // サーバーにIDトークンを送信
       const form = new FormData();
       form.append("intent", "google");
       form.append("idToken", result.user.idToken);
@@ -149,7 +172,6 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
         });
 
         if (response.ok) {
-          // フォームを使用したリダイレクト
           const redirectForm = document.createElement("form");
           redirectForm.method = "GET";
           redirectForm.action = "/home";
@@ -157,16 +179,14 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
           redirectForm.submit();
         } else {
           await response.json();
-          // Login error occurred
+
           setIsLoadingGoogle(false);
         }
       } catch {
-        // Request error occurred
         setIsLoadingGoogle(false);
       }
     } else {
       setIsLoadingGoogle(false);
-      // Error: result.error
     }
   };
 

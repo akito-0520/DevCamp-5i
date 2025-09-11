@@ -5,5 +5,4 @@ export type HackathonInvitation = {
   isJoin: boolean;
   teamNumber: number;
   limitDay: Date;
-  groupId: string;
 };

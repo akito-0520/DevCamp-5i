@@ -55,14 +55,14 @@ export function RoomGrid({
             room={room}
             isCurrentUser={room.userId === currentUserId}
             onClick={() => handleRoomClick(room.id)}
-          />
+          />,
         );
       }
     }
     roomGrid.push(
       <div key={y} className="flex gap-2">
         {row}
-      </div>
+      </div>,
     );
   }
 

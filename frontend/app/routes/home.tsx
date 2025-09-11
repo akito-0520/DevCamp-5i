@@ -10,6 +10,8 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import { LogoutConfirmDialog } from "~/components/LogoutConfirmDialog";
 import { CreateGroupDialog } from "~/components/CreateGroupDialog";
 import { EditGroupDialog } from "~/components/EditGroupDialog";
+import { UserInfoCard } from "~/components/UserInfoCard";
+import { UserRegistrationModal } from "~/components/UserRegistrationModal";
 import { useState, useEffect } from "react";
 import {
   addGroupList,
@@ -17,13 +19,15 @@ import {
 } from "~/common/services/groupList.server";
 import type { Group } from "~/common/types/Group";
 import type { GroupMember } from "~/common/types/GroupMember";
+import { getUser, updateUser } from "~/common/services/user.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await requireUserId(request);
   const participatedGroupIdList = await getParticipatedGroupId(userId);
 
   const groupList = await getParticipatedGroup(participatedGroupIdList);
-  return { groupList, userId };
+  const currentUser = await getUser(userId);
+  return { groupList, userId, currentUser };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -31,7 +35,37 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
 
-  if (actionType === "update") {
+  if (actionType === "updateUser") {
+    const updates: any = {};
+
+    const firstName = formData.get("firstName");
+    const lastName = formData.get("lastName");
+    const nickName = formData.get("nickName");
+    const userCategory = formData.get("userCategory");
+    const discordAccount = formData.get("discordAccount");
+    const schoolCategory = formData.get("schoolCategory");
+    const schoolName = formData.get("schoolName");
+    const schoolYear = formData.get("schoolYear");
+    const schoolDepartment = formData.get("schoolDepartment");
+
+    if (firstName !== null) updates.firstName = firstName;
+    if (lastName !== null) updates.lastName = lastName;
+    if (nickName !== null) updates.nickName = nickName;
+    if (userCategory !== null) updates.userCategory = Number(userCategory);
+    if (discordAccount !== null) updates.discordAccount = discordAccount;
+    if (schoolCategory !== null)
+      updates.schoolCategory = Number(schoolCategory);
+    if (schoolName !== null) updates.schoolName = schoolName;
+    if (schoolYear !== null) updates.schoolYear = Number(schoolYear);
+    if (schoolDepartment !== null) updates.schoolDepartment = schoolDepartment;
+
+    try {
+      await updateUser(userId, updates);
+      return { success: true };
+    } catch (error) {
+      throw new Response("Failed to update user: " + error, { status: 500 });
+    }
+  } else if (actionType === "update") {
     const groupId = formData.get("groupId");
     const name = formData.get("name");
     const introduction = formData.get("introduction");
@@ -90,7 +124,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Home() {
-  const { groupList, userId } = useLoaderData<typeof loader>();
+  const { groupList, userId, currentUser } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
@@ -99,6 +133,15 @@ export default function Home() {
   const fetcher = useFetcher();
 
   const isSubmitting = fetcher.state === "submitting";
+
+  // Check if user info is incomplete
+  const isUserInfoIncomplete =
+    !currentUser ||
+    !currentUser.firstName?.trim() ||
+    !currentUser.lastName?.trim() ||
+    !currentUser.nickName?.trim() ||
+    !currentUser.schoolName?.trim() ||
+    !currentUser.schoolDepartment?.trim();
 
   useEffect(() => {
     if (fetcher.data?.success) {
@@ -191,12 +234,17 @@ export default function Home() {
           ログアウト
         </button>
       </div>
-      <div className="px-4">
-        <GroupList
-          groupList={groupList}
-          onEdit={handleEditGroup}
-          currentUserId={userId}
-        />
+      <div className="px-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <GroupList
+            groupList={groupList}
+            onEdit={handleEditGroup}
+            currentUserId={userId}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <UserInfoCard user={currentUser} />
+        </div>
       </div>
       <LogoutConfirmDialog
         isOpen={showLogoutDialog}
@@ -219,6 +267,7 @@ export default function Home() {
         group={editingGroup}
         isUpdating={isSubmitting}
       />
+      <UserRegistrationModal user={currentUser} isOpen={isUserInfoIncomplete} />
     </div>
   );
 }

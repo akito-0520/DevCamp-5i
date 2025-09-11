@@ -42,14 +42,11 @@ export async function action({ request }: Route.ActionArgs) {
         const existingUser = await getUser(userId);
 
         if (!existingUser) {
-          // Create new user for first-time Google login
-          const [firstName, ...lastNameParts] = (
-            result.user.displayName || ""
-          ).split(" ");
+          // Create new user for first-time login
           await createUser({
             userId: userId,
-            firstName: firstName || "",
-            lastName: lastNameParts.join(" ") || "",
+            firstName: "",
+            lastName: "",
             nickName: "",
             userCategory: 0,
             discordAccount: "",

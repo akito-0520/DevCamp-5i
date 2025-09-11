@@ -12,6 +12,11 @@ import {
   getGroupMembersList,
   updateUserPosition,
 } from "~/common/services/groupList.server";
+import {
+  createHackathon,
+  getHackathons,
+} from "~/common/services/hackathon.server";
+import { getUserHackathonLists } from "~/common/services/hackathonList.server";
 
 interface RoomUserInfo {
   user: User;
@@ -48,32 +53,85 @@ export async function loader({ request }: Route.LoaderArgs) {
     }),
   );
 
-  return { userId, roomUsersInfo, groupMembers, group };
+  // ユーザーが作成したハッカソン一覧を取得
+  const userHackathonLists = await getUserHackathonLists(userId);
+
+  const groupHackathons = await getHackathons(groupId);
+
+  const thisGroupHackathonLists = groupHackathons.filter((groupHackathon) => {
+    return userHackathonLists.some(
+      (invitation) => invitation.hackathonId === groupHackathon.hackathonId,
+    );
+  });
+
+  return {
+    userId,
+    roomUsersInfo,
+    groupMembers,
+    group,
+    thisGroupHackathonLists,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
+  const actionType = formData.get("actionType");
 
-  const groupListId = formData.get("groupListId");
-  const x = formData.get("x");
-  const y = formData.get("y");
-  const groupId = formData.get("groupId");
+  if (actionType === "createHackathon") {
+    const hackathonDataString = formData.get("hackathonData");
 
-  if (!x || !y || !groupId) {
-    throw new Response("Missing required fields", { status: 400 });
-  }
+    if (!hackathonDataString) {
+      throw new Response("Missing hackathon data", { status: 400 });
+    }
 
-  try {
-    const position = {
-      x: Number(x),
-      y: Number(y),
-    };
+    try {
+      const hackathonData = JSON.parse(hackathonDataString as string);
 
-    await updateUserPosition(String(groupListId), position);
+      // Date型に変換
+      if (hackathonData.startDate) {
+        hackathonData.startDate = new Date(hackathonData.startDate);
+      }
+      if (hackathonData.finishDate) {
+        hackathonData.finishDate = new Date(hackathonData.finishDate);
+      }
 
-    return { success: true };
-  } catch (error) {
-    throw new Response("Failed to update position:" + error, { status: 500 });
+      await createHackathon(hackathonData);
+      return { success: true };
+    } catch (error) {
+      throw new Response(
+        `Failed to create hackathon: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
+    }
+  } else if (actionType === "saveConfirm") {
+    // 既存の位置更新処理
+    const saveDataString = formData.get("saveData");
+
+    if (!saveDataString) {
+      throw new Response("Missing hackathon data", { status: 400 });
+    }
+
+    try {
+      const saveData = JSON.parse(saveDataString as string);
+      const groupListId = saveData.groupListId;
+      const x = saveData.x;
+      const y = saveData.y;
+      const groupId = saveData.groupId;
+
+      if (!x || !y || !groupId) {
+        throw new Response("Missing required fields", { status: 400 });
+      }
+      const position = {
+        x: Number(x),
+        y: Number(y),
+      };
+
+      await updateUserPosition(String(groupListId), position);
+
+      return { success: true };
+    } catch (error) {
+      throw new Response("Failed to update position:" + error, { status: 500 });
+    }
   }
 }
 
@@ -88,8 +146,13 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Group() {
-  const { userId, roomUsersInfo, groupMembers, group } =
-    useLoaderData<typeof loader>();
+  const {
+    userId,
+    roomUsersInfo,
+    groupMembers,
+    group,
+    thisGroupHackathonLists,
+  } = useLoaderData<typeof loader>();
   const { moveUserToRoom, setCurrentUser, addUser, rooms } = useRoomStore();
   const fetcher = useFetcher();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -155,16 +218,19 @@ export default function Group() {
       setShowSaveDialog(false);
       return;
     }
+    const formData = new FormData();
 
-    fetcher.submit(
-      {
+    formData.append("actionType", "saveConfirm");
+    formData.append(
+      "saveData",
+      JSON.stringify({
         groupListId: groupList.id,
         x: userPosition.x.toString(),
         y: userPosition.y.toString(),
         groupId: groupId,
-      },
-      { method: "post" },
+      }),
     );
+    fetcher.submit(formData, { method: "post" });
   };
 
   return (
@@ -231,7 +297,11 @@ export default function Group() {
           </button>
         </div>
       </div>
-      <RoomGrid groupName={group.name} />
+      <RoomGrid
+        groupName={group.name}
+        hackathons={thisGroupHackathonLists}
+        groupId={group.id}
+      />
       <SaveConfirmDialog
         isOpen={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}

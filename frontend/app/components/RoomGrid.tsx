@@ -14,8 +14,12 @@ interface RoomGridProps {
   hackathons?: Hackathon[];
 }
 
-export function RoomGrid({ groupName }: RoomGridProps) {
-  const { rooms, currentUserId, initializeRooms, moveUserToRoom } =
+export function RoomGrid({
+  groupName,
+  groupId,
+  hackathons = [],
+}: RoomGridProps) {
+  const { rooms, currentUserId, initializeRooms, moveUserToRoom, users } =
     useRoomStore();
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);

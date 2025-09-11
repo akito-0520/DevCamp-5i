@@ -14,8 +14,12 @@ interface RoomGridProps {
   hackathons?: Hackathon[];
 }
 
-export function RoomGrid({ groupName }: RoomGridProps) {
-  const { rooms, currentUserId, initializeRooms, moveUserToRoom } =
+export function RoomGrid({
+  groupName,
+  groupId,
+  hackathons = [],
+}: RoomGridProps) {
+  const { rooms, currentUserId, initializeRooms, moveUserToRoom, users } =
     useRoomStore();
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -51,14 +55,14 @@ export function RoomGrid({ groupName }: RoomGridProps) {
             room={room}
             isCurrentUser={room.userId === currentUserId}
             onClick={() => handleRoomClick(room.id)}
-          />
+          />,
         );
       }
     }
     roomGrid.push(
       <div key={y} className="flex gap-2">
         {row}
-      </div>
+      </div>,
     );
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Room } from "./Room";
 import { useRoomStore } from "../common/store/useRoomStore";
 import { UserProfile } from "./UserProfile";
@@ -11,13 +11,11 @@ interface RoomGridProps {
 }
 
 export function RoomGrid({ groupName }: RoomGridProps) {
-  const { rooms, currentUserId, initializeRooms, moveUserToRoom, teams } =
+  const { rooms, currentUserId, initializeRooms, moveUserToRoom } =
     useRoomStore();
 
-  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
-    null,
-  );
-  const [showHackathonPanel, setShowHackathonPanel] = React.useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showHackathonPanel, setShowHackathonPanel] = useState(false);
 
   useEffect(() => {
     initializeRooms(GRID_SIZE);
@@ -37,12 +35,6 @@ export function RoomGrid({ groupName }: RoomGridProps) {
     }
   };
 
-  const getTeamColor = (teamId?: string) => {
-    if (!teamId) return undefined;
-    const team = teams.get(teamId);
-    return team?.color;
-  };
-
   const roomGrid = [];
   for (let y = 0; y < GRID_SIZE; y++) {
     const row = [];
@@ -55,15 +47,14 @@ export function RoomGrid({ groupName }: RoomGridProps) {
             room={room}
             isCurrentUser={room.userId === currentUserId}
             onClick={() => handleRoomClick(room.id)}
-            teamColor={getTeamColor(room.teamId)}
-          />,
+          />
         );
       }
     }
     roomGrid.push(
       <div key={y} className="flex gap-2">
         {row}
-      </div>,
+      </div>
     );
   }
 

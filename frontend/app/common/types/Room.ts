@@ -6,5 +6,4 @@ export interface Room {
   y: number;
   userId?: string;
   user?: User;
-  teamId?: string;
 }

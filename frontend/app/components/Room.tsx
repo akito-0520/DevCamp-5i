@@ -3,10 +3,9 @@ interface RoomProps {
   room: RoomType;
   isCurrentUser: boolean;
   onClick: () => void;
-  teamColor?: string;
 }
 
-export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
+export function Room({ room, isCurrentUser, onClick }: RoomProps) {
   const { user } = room;
 
   return (
@@ -16,7 +15,6 @@ export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
         relative w-20 h-20 border-2 rounded-lg cursor-pointer
         transition-all duration-200 hover:scale-105
         ${isCurrentUser ? "border-blue-500 bg-blue-50 dark:bg-blue-950" : "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"}
-        ${teamColor ? `ring-4 ring-${teamColor}-400 ring-opacity-50` : ""}
         ${!user ? "hover:bg-gray-50 dark:hover:bg-gray-800" : ""}
       `}
     >
@@ -44,15 +42,6 @@ export function Room({ room, isCurrentUser, onClick, teamColor }: RoomProps) {
       ) : (
         <div className="flex items-center justify-center h-full">
           <span className="text-gray-400 dark:text-gray-600 text-xs">空き</span>
-        </div>
-      )}
-
-      {room.teamId && (
-        <div
-          className={`absolute -top-2 -right-2 w-5 h-5 rounded-full bg-${teamColor}-500 flex items-center justify-center`}
-          title={`Team ${room.teamId}`}
-        >
-          <span className="text-white text-xs font-bold">T</span>
         </div>
       )}
     </div>

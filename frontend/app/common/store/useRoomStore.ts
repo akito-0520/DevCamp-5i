@@ -1,12 +1,10 @@
 import { create } from "zustand";
 import type { Room } from "~/common/types/Room";
-import type { Team } from "~/common/types/Team";
 import type { RoomStore } from "../types/RoomStore";
 
 export const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
   users: new Map(),
-  teams: new Map(),
   hackathons: new Map(),
   currentUserId: null,
 
@@ -45,29 +43,6 @@ export const useRoomStore = create<RoomStore>((set) => ({
         users.set(userId, { ...currentUser, ...userData });
       }
       return { users };
-    });
-  },
-
-  createTeam: (teamData) => {
-    const teamId = `team-${Date.now()}`;
-    const team: Team = { ...teamData, id: teamId };
-    set((state) => {
-      const teams = new Map(state.teams);
-      teams.set(teamId, team);
-      return { teams };
-    });
-    return teamId;
-  },
-
-  assignTeamToRooms: (teamId, roomIds) => {
-    set((state) => {
-      const rooms = state.rooms.map((room) => {
-        if (roomIds.includes(room.id)) {
-          return { ...room, teamId };
-        }
-        return room;
-      });
-      return { rooms };
     });
   },
 

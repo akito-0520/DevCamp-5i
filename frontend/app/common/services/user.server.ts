@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "~/firebaseConfig";
 import type { User } from "../types/User";
 
@@ -10,8 +10,7 @@ export async function getUser(userId: string) {
 
   const data = snap.data();
   return {
-    id: snap.id,
-    userId: data.user_id,
+    userId: snap.id,
     firstName: data.first_name,
     lastName: data.last_name,
     nickName: data.nick_name,
@@ -38,4 +37,28 @@ export async function createUser(user: User) {
     school_department: user.schoolDepartment,
   });
   return user.userId;
+}
+
+export async function updateUser(userId: string, updates: Partial<User>) {
+  const docRef = doc(db, "user", userId);
+
+  const updateData: any = {};
+  if (updates.firstName !== undefined)
+    updateData.first_name = updates.firstName;
+  if (updates.lastName !== undefined) updateData.last_name = updates.lastName;
+  if (updates.nickName !== undefined) updateData.nick_name = updates.nickName;
+  if (updates.userCategory !== undefined)
+    updateData.user_category = updates.userCategory;
+  if (updates.discordAccount !== undefined)
+    updateData.discord_account = updates.discordAccount;
+  if (updates.schoolCategory !== undefined)
+    updateData.school_category = updates.schoolCategory;
+  if (updates.schoolName !== undefined)
+    updateData.school_name = updates.schoolName;
+  if (updates.schoolYear !== undefined)
+    updateData.school_year = updates.schoolYear;
+  if (updates.schoolDepartment !== undefined)
+    updateData.school_department = updates.schoolDepartment;
+
+  await updateDoc(docRef, updateData);
 }

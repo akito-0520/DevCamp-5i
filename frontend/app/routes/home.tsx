@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import {
   addGroupList,
   getParticipatedGroupId,
+  findAvailablePosition,
 } from "~/common/services/groupList.server";
 import type { Group } from "~/common/types/Group";
 import type { GroupMember } from "~/common/types/GroupMember";
@@ -54,14 +55,18 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     try {
+      // Find available position
+      const availablePosition = await findAvailablePosition(groupId as string);
+
+      if (!availablePosition) {
+        return { error: "グループは満員です（最大35名）。" };
+      }
+
       const addGroupListProps = {
         groupId: groupId as string,
         userId: userId,
         role: 1, // Regular member role
-        position: {
-          x: 0,
-          y: 0,
-        },
+        position: availablePosition,
       } as GroupMember;
       await addGroupList(addGroupListProps);
       return { success: true };
@@ -164,6 +169,7 @@ export default function Home() {
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [showEditGroupDialog, setShowEditGroupDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetcher = useFetcher();
 
   const isSubmitting = fetcher.state === "submitting";
@@ -182,7 +188,13 @@ export default function Home() {
       setShowCreateGroupDialog(false);
       setShowEditGroupDialog(false);
       setEditingGroup(null);
+      setErrorMessage(null);
       window.location.reload();
+    }
+
+    if (fetcher.data?.error) {
+      setErrorMessage(fetcher.data.error);
+      setTimeout(() => setErrorMessage(null), 5000);
     }
   }, [fetcher.data]);
 
@@ -278,6 +290,11 @@ export default function Home() {
           ログアウト
         </button>
       </div>
+      {errorMessage && (
+        <div className="mx-4 mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
       <div className="px-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-8">
           <GroupList

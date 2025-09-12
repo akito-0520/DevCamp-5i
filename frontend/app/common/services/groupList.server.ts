@@ -76,6 +76,37 @@ export async function updateUserPosition(
   });
 }
 
+export async function findAvailablePosition(
+  groupId: string,
+): Promise<{ x: number; y: number } | null> {
+  const GRID_SIZE = 6;
+  const MAX_MEMBERS = GRID_SIZE * GRID_SIZE - 1; // 35 members (36 rooms - 1)
+
+  // Get all current members' positions
+  const members = await getGroupMembersList(groupId);
+
+  // Check if group is full
+  if (members.length >= MAX_MEMBERS) {
+    return null; // Group is full
+  }
+
+  // Create a set of occupied positions
+  const occupiedPositions = new Set(
+    members.map((member) => `${member.position.x},${member.position.y}`),
+  );
+
+  // Find first available position
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (!occupiedPositions.has(`${x},${y}`)) {
+        return { x, y };
+      }
+    }
+  }
+
+  return null; // No available position (shouldn't happen if count check is correct)
+}
+
 export async function addGroupList(groupList: GroupMember) {
   const q = collection(db, "group_list");
   await addDoc(q, {

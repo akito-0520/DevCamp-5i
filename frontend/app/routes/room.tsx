@@ -15,8 +15,12 @@ import {
 import {
   createHackathon,
   getHackathons,
+  updateHackathonDeadline,
 } from "~/common/services/hackathon.server";
-import { getUserHackathonLists } from "~/common/services/hackathonList.server";
+import {
+  getUserHackathonLists,
+  acceptHackathonInvitation,
+} from "~/common/services/hackathonList.server";
 
 interface RoomUserInfo {
   user: User;
@@ -70,6 +74,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     groupMembers,
     group,
     thisGroupHackathonLists,
+    userHackathonLists, // Pass the invitation data
   };
 }
 
@@ -77,7 +82,39 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
 
-  if (actionType === "createHackathon") {
+  if (actionType === "acceptInvitation") {
+    const invitationId = formData.get("invitationId");
+
+    if (!invitationId) {
+      throw new Response("Missing invitation ID", { status: 400 });
+    }
+
+    try {
+      await acceptHackathonInvitation(invitationId as string);
+      return { success: true };
+    } catch (error) {
+      throw new Response(
+        `Failed to accept invitation: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
+    }
+  } else if (actionType === "updateDeadline") {
+    const hackathonId = formData.get("hackathonId");
+
+    if (!hackathonId) {
+      throw new Response("Missing hackathon ID", { status: 400 });
+    }
+
+    try {
+      await updateHackathonDeadline(hackathonId as string, true);
+      return { success: true };
+    } catch (error) {
+      throw new Response(
+        `Failed to update deadline: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
+    }
+  } else if (actionType === "createHackathon") {
     const hackathonDataString = formData.get("hackathonData");
 
     if (!hackathonDataString) {
@@ -162,6 +199,7 @@ export default function Group() {
     groupMembers,
     group,
     thisGroupHackathonLists,
+    userHackathonLists,
   } = useLoaderData<typeof loader>();
   const { moveUserToRoom, setCurrentUser, addUser, rooms } = useRoomStore();
   const fetcher = useFetcher();
@@ -334,6 +372,7 @@ export default function Group() {
         groupName={group.name}
         hackathons={thisGroupHackathonLists}
         groupId={group.id}
+        userHackathonLists={userHackathonLists}
       />
       <SaveConfirmDialog
         isOpen={showSaveDialog}

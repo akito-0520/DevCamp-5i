@@ -71,3 +71,18 @@ export async function updateGroup(groupId: string, group: Partial<Group>) {
 
   await updateDoc(ref, updateData);
 }
+
+export async function getAllGroups() {
+  const q = query(collection(db, "group"));
+  const snap = await getDocs(q);
+
+  return snap.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.group_name,
+      introduction: data.group_introduction,
+      makerUserId: data.maker_user_id,
+    } as Group;
+  });
+}

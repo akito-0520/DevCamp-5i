@@ -121,15 +121,25 @@ export async function action({ request }: Route.ActionArgs) {
       if (!x || !y || !groupId) {
         throw new Response("Missing required fields", { status: 400 });
       }
+
+      const userId = await requireUserId(request);
       const position = {
         x: Number(x),
         y: Number(y),
       };
 
-      await updateUserPosition(String(groupListId), position);
+      await updateUserPosition(
+        String(groupListId),
+        position,
+        String(groupId),
+        userId,
+      );
 
       return { success: true };
     } catch (error) {
+      if (error instanceof Error && error.message.includes("occupied")) {
+        return { error: "Position is already occupied by another user" };
+      }
       throw new Response("Failed to update position:" + error, { status: 500 });
     }
   }
@@ -156,6 +166,7 @@ export default function Group() {
   const { moveUserToRoom, setCurrentUser, addUser, rooms } = useRoomStore();
   const fetcher = useFetcher();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isSaving = fetcher.state === "submitting";
 
@@ -185,9 +196,26 @@ export default function Group() {
     // 保存完了時の処理
     if (fetcher.data?.success && showSaveDialog) {
       setShowSaveDialog(false);
+      setErrorMessage(null);
       setTimeout(() => {
         window.location.reload();
       }, 500);
+    }
+
+    // エラー処理
+    if (fetcher.data?.error) {
+      if (fetcher.data.error.includes("occupied")) {
+        setErrorMessage(
+          "その位置は既に他のユーザーが使用しています。別の位置を選択してください。",
+        );
+        setShowSaveDialog(false);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        setErrorMessage("保存中にエラーが発生しました。");
+        setShowSaveDialog(false);
+      }
     }
   }, [fetcher.data, showSaveDialog]);
 
@@ -297,6 +325,11 @@ export default function Group() {
           </button>
         </div>
       </div>
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
       <RoomGrid
         groupName={group.name}
         hackathons={thisGroupHackathonLists}

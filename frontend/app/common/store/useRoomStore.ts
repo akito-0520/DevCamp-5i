@@ -21,6 +21,15 @@ export const useRoomStore = create<RoomStore>((set) => ({
 
   moveUserToRoom: (userId, x, y) => {
     set((state) => {
+      // Check if target position is already occupied
+      const targetRoom = state.rooms.find(
+        (room) => room.x === x && room.y === y,
+      );
+      if (targetRoom?.userId && targetRoom.userId !== userId) {
+        // Position is already occupied by another user, don't move
+        return state;
+      }
+
       const rooms = state.rooms.map((room) => {
         if (room.userId === userId) {
           return { ...room, userId: undefined, user: undefined };

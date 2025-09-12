@@ -46,9 +46,32 @@ export async function getGroupMembersList(groupId: string) {
 export async function updateUserPosition(
   groupListId: string,
   position: { x: number; y: number },
+  groupId: string,
+  userId: string,
 ) {
-  const q = doc(db, "group_list", groupListId);
-  await updateDoc(q, {
+  // Check if the position is already occupied by another user
+  const q = query(
+    collection(db, "group_list"),
+    where("group_id", "==", groupId),
+    where("position.x", "==", position.x),
+    where("position.y", "==", position.y),
+  );
+
+  const snap = await getDocs(q);
+
+  // Check if position is occupied by another user
+  const isOccupied = snap.docs.some((doc) => {
+    const data = doc.data();
+    return data.user_id !== userId; // Position is occupied by different user
+  });
+
+  if (isOccupied) {
+    throw new Error("Position is already occupied by another user");
+  }
+
+  // Update the position if not occupied
+  const docRef = doc(db, "group_list", groupListId);
+  await updateDoc(docRef, {
     position: position,
   });
 }

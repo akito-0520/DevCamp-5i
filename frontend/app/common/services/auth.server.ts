@@ -8,6 +8,16 @@ type SessionFlashData = {
   error: string;
 };
 
+// In production, SESSION_SECRET must be set
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET is required in production");
+}
+
+// Debug logs removed for production
+
+const isProduction = process.env.NODE_ENV === "production";
+const isSecureContext = process.env.USE_HTTPS === "true";
+
 const { getSession, commitSession, destroySession } =
   createCookieSessionStorage<SessionData, SessionFlashData>({
     cookie: {
@@ -17,7 +27,7 @@ const { getSession, commitSession, destroySession } =
       path: "/",
       sameSite: "lax",
       secrets: [process.env.SESSION_SECRET || "s3cr3t"],
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction && isSecureContext, // Only use secure in production with HTTPS
     },
   });
 
@@ -31,11 +41,16 @@ export async function requireUserId(
 ) {
   const session = await getAuthSession(request);
   const userId = session.get("userId");
+  console.log("[AUTH] requireUserId - session userId:", userId);
+
   if (!userId || typeof userId !== "string") {
     const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
+    console.log("[AUTH] No userId found, redirecting to login");
     throw redirect(`/login?${searchParams}`);
   }
-  return userId.replace(/^firebase-/, "");
+  const cleanUserId = userId.replace(/^firebase-/, "");
+  console.log("[AUTH] Returning clean userId:", cleanUserId);
+  return cleanUserId;
 }
 
 export async function getUserId(request: Request) {
@@ -57,9 +72,14 @@ export async function logout(request: Request) {
 export async function createUserSession(userId: string, redirectTo: string) {
   const session = await getSession();
   session.set("userId", userId);
+  console.log("[AUTH] Creating session with userId:", userId);
+
+  const cookie = await commitSession(session);
+  console.log("[AUTH] Session cookie created");
+
   return redirect(redirectTo, {
     headers: {
-      "Set-Cookie": await commitSession(session),
+      "Set-Cookie": cookie,
     },
   });
 }

@@ -37,3 +37,25 @@ export async function acceptHackathonInvitation(invitationId: string) {
     is_invite_accept: true,
   });
 }
+
+export async function getUserHackathonListsByHackathon(hackathonId: string) {
+  const q = query(
+    collection(db, "hackathon_list"),
+    where("hackathon_id", "==", hackathonId),
+  );
+
+  const snap = await getDocs(q);
+
+  return snap.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      hackathonId: data.hackathon_id,
+      userId: data.user_id,
+      isInviteAccept: data.is_invite_accept,
+      isJoin: data.is_join,
+      teamNumber: data.team_number,
+      limitDay: data.limit_day ? new Date(data.limit_day) : undefined,
+    } as HackathonInvitation & { id: string };
+  });
+}

@@ -34,7 +34,6 @@ export async function verifyIdToken(idToken: string) {
       },
     };
   } catch (error: any) {
-    // ID token verification error: error
     return {
       success: false,
       error: error.message || "IDトークンの検証に失敗しました",
@@ -46,5 +45,5 @@ export async function verifyIdToken(idToken: string) {
  * Firebaseユーザー情報からセッション用のユーザーIDを生成
  */
 export function createUserIdFromFirebase(firebaseUid: string): string {
-  return firebaseUid;
+  return `firebase-${firebaseUid}`;
 }

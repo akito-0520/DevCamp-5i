@@ -7,6 +7,7 @@ interface HackathonDetailModalProps {
   onClose: () => void;
   hackathon: Hackathon | null;
   currentUserId?: string;
+  isJoin?: boolean;
 }
 
 interface TeamMember {
@@ -26,21 +27,22 @@ export function HackathonDetailModal({
   onClose,
   hackathon,
   currentUserId,
+  isJoin = false,
 }: HackathonDetailModalProps) {
   const fetcher = useFetcher();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen && hackathon) {
+    if (isOpen && hackathon && isJoin) {
       setIsLoading(true);
-      // Fetch team members data
+      // Fetch team members data only if isJoin is true
       const formData = new FormData();
       formData.append("actionType", "getHackathonMembers");
       formData.append("hackathonId", hackathon.hackathonId);
       fetcher.submit(formData, { method: "post" });
     }
-  }, [isOpen, hackathon]);
+  }, [isOpen, hackathon, isJoin]);
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data?.members) {
@@ -176,72 +178,76 @@ export function HackathonDetailModal({
             </div>
           </div>
 
-          {/* Team Members */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              参加メンバー
-            </h3>
-            {isLoading ? (
-              <div className="text-center py-4">
+          {/* Team Members - Only show if isJoin is true */}
+          {isJoin && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                参加メンバー
+              </h3>
+              {isLoading ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    メンバー情報を読み込み中...
+                  </p>
+                </div>
+              ) : Object.keys(groupedMembers).length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">
-                  メンバー情報を読み込み中...
+                  メンバー情報がありません
                 </p>
-              </div>
-            ) : Object.keys(groupedMembers).length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">
-                メンバー情報がありません
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(groupedMembers).map(([teamNumber, members]) => (
-                  <div
-                    key={teamNumber}
-                    className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
-                  >
-                    {teamNumber !== "0" && (
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-                        チーム {teamNumber}
-                      </h4>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {members.map((member) => (
-                        <div
-                          key={member.userId}
-                          className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm"
-                        >
-                          <div className="space-y-1 text-sm">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              {member.nickName ||
-                                `${member.firstName} ${member.lastName}`}
-                              {member.userId === hackathon.ownerId && (
-                                <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 rounded">
-                                  主催者
-                                </span>
-                              )}
-                              {member.userId === currentUserId && (
-                                <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">
-                                  あなた
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              {member.schoolName} {member.schoolYear}年
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              {member.schoolDepartment}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Discord: {member.discordAccount}
-                            </p>
-                          </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries(groupedMembers).map(
+                    ([teamNumber, members]) => (
+                      <div
+                        key={teamNumber}
+                        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
+                      >
+                        {teamNumber !== "0" && (
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
+                            チーム {teamNumber}
+                          </h4>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {members.map((member) => (
+                            <div
+                              key={member.userId}
+                              className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm"
+                            >
+                              <div className="space-y-1 text-sm">
+                                <p className="font-medium text-gray-900 dark:text-gray-100">
+                                  {member.nickName ||
+                                    `${member.firstName} ${member.lastName}`}
+                                  {member.userId === hackathon.ownerId && (
+                                    <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 rounded">
+                                      主催者
+                                    </span>
+                                  )}
+                                  {member.userId === currentUserId && (
+                                    <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">
+                                      あなた
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  {member.schoolName} {member.schoolYear}年
+                                </p>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  {member.schoolDepartment}
+                                </p>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  Discord: {member.discordAccount}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

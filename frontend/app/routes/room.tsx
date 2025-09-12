@@ -20,6 +20,7 @@ import {
 import {
   getUserHackathonLists,
   acceptHackathonInvitation,
+  getUserHackathonListsByHackathon,
 } from "~/common/services/hackathonList.server";
 
 interface RoomUserInfo {
@@ -138,6 +139,38 @@ export async function action({ request }: Route.ActionArgs) {
     } catch (error) {
       throw new Response(
         `Failed to create hackathon: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
+    }
+  } else if (actionType === "getHackathonMembers") {
+    const hackathonId = formData.get("hackathonId");
+
+    if (!hackathonId) {
+      throw new Response("Missing hackathon ID", { status: 400 });
+    }
+
+    try {
+      // Get all invitations for this hackathon where is_join is true
+      const invitations = await getUserHackathonListsByHackathon(
+        hackathonId as string,
+      );
+      const joinedInvitations = invitations.filter((inv) => inv.isJoin);
+
+      // Get user details for each joined member
+      const members = await Promise.all(
+        joinedInvitations.map(async (invitation) => {
+          const user = await getUser(invitation.userId);
+          return {
+            ...user,
+            teamNumber: invitation.teamNumber,
+          };
+        }),
+      );
+
+      return { members };
+    } catch (error) {
+      throw new Response(
+        `Failed to get hackathon members: ${error instanceof Error ? error.message : String(error)}`,
         { status: 500 },
       );
     }

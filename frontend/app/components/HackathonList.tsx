@@ -274,20 +274,18 @@ export function HackathonList({
                     ) : null;
                   })()}
 
-                  {/* 詳細ボタン: is_joinがtrueの場合のみ表示 */}
-                  {invitation && invitation.isJoin && (
-                    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => {
-                          setDetailHackathon(hackathon);
-                          setShowDetailModal(true);
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-                      >
-                        詳細を見る
-                      </button>
-                    </div>
-                  )}
+                  {/* 詳細ボタン: 常に表示 */}
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        setDetailHackathon(hackathon);
+                        setShowDetailModal(true);
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+                    >
+                      詳細を見る
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -323,6 +321,11 @@ export function HackathonList({
         }}
         hackathon={detailHackathon}
         currentUserId={currentUserId}
+        isJoin={
+          detailHackathon
+            ? getInvitation(detailHackathon.hackathonId)?.isJoin || false
+            : false
+        }
       />
     </div>
   );

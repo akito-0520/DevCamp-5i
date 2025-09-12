@@ -115,11 +115,19 @@ export function RoomGrid({
         </div>
 
         <div className="w-96">
-          <HackathonList
-            hackathons={hackathons}
-            currentUserId={currentUserId ?? undefined}
-            userHackathonLists={userHackathonLists}
-          />
+          {currentUserId ? (
+            <HackathonList
+              hackathons={hackathons}
+              currentUserId={currentUserId}
+              userHackathonLists={userHackathonLists}
+            />
+          ) : (
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                読み込み中...
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

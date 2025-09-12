@@ -2,6 +2,7 @@ import type { Hackathon } from "~/common/types/Hackathon";
 import { useFetcher } from "react-router";
 import { useState } from "react";
 import { DeadlineConfirmDialog } from "./DeadlineConfirmDialog";
+import { HackathonDetailModal } from "./HackathonDetailModal";
 
 interface HackathonListProps {
   hackathons: Hackathon[];
@@ -22,6 +23,10 @@ export function HackathonList({
     null,
   );
   const [activeTab, setActiveTab] = useState<"active" | "closed">("active");
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailHackathon, setDetailHackathon] = useState<Hackathon | null>(
+    null,
+  );
 
   // Find invitation for a hackathon
   const getInvitation = (hackathonId: string) => {
@@ -37,12 +42,12 @@ export function HackathonList({
     const invitation = getInvitation(hackathon.hackathonId);
     const isOwner = currentUserId === hackathon.ownerId;
 
-    // 主催者の場合
     if (isOwner) {
-      // 終了済み
+      // 主催者の場合
       if (now > finishDate) return true;
-      // 締切設定済みかつis_joinがfalse
+      // 終了済み
       if (hackathon.isDeadline && (!invitation || !invitation.isJoin))
+        // 締切設定済みかつis_joinがfalse
         return true;
     } else {
       // 招待される側の場合
@@ -64,94 +69,48 @@ export function HackathonList({
     const now = new Date();
     const startDate = new Date(hackathon.startDate);
     const finishDate = new Date(hackathon.finishDate);
-    const isOwner = currentUserId === hackathon.ownerId;
     const invitation = getInvitation(hackathon.hackathonId);
 
+    // if (isOwner) {
     // 主催者の場合
-    if (isOwner) {
-      if (now > finishDate) {
+    if (now > finishDate) {
+      // 現在が終了日より後
+      return (
+        <span className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
+          終了
+        </span>
+      );
+    } else if (now < startDate) {
+      // 現在が開始日より前
+      if (!hackathon.isDeadline) {
+        // 締切前
         return (
-          <span className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
-            終了
+          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+            募集中
           </span>
         );
-      } else if (now < startDate) {
-        // 締切済みの場合
-        if (hackathon.isDeadline) {
-          // is_joinがtrueなら「開催待ち」、falseなら「締切」
-          if (invitation && invitation.isJoin) {
-            return (
-              <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">
-                開催待ち
-              </span>
-            );
-          } else {
-            return (
-              <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                締切
-              </span>
-            );
-          }
-        } else {
-          // まだ締切になっていない場合は「募集中」
+      } else {
+        if (invitation.isJoin) {
           return (
-            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-              募集中
+            <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">
+              開催待ち
             </span>
           );
-        }
-      } else if (now >= startDate && now <= finishDate) {
-        return (
-          <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-            開催中
-          </span>
-        );
-      }
-    } else {
-      // 招待される側の場合
-      if (now > finishDate) {
-        // 終了後、チームメンバー（is_join = true）なら「終了」を表示
-        if (invitation && invitation.isJoin) {
+        } else {
           return (
             <span className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
               終了
             </span>
           );
         }
-      } else if (now < startDate) {
-        // 開催前
-        if (!hackathon.isDeadline) {
-          // 締切前は「募集中」
-          return (
-            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-              募集中
-            </span>
-          );
-        } else if (
-          invitation &&
-          invitation.isInviteAccept &&
-          invitation.isJoin
-        ) {
-          // 招待を受け入れてチームに参加済みなら「開催待ち」
-          return (
-            <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">
-              開催待ち
-            </span>
-          );
-        }
-      } else if (now >= startDate && now <= finishDate) {
-        // 開催中、チームメンバーなら「開催中」を表示
-        if (invitation && invitation.isJoin) {
-          return (
-            <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-              開催中
-            </span>
-          );
-        }
       }
+    } else {
+      return (
+        <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
+          開催中
+        </span>
+      );
     }
-
-    return null;
   };
 
   // Filter hackathons based on active tab
@@ -215,9 +174,8 @@ export function HackathonList({
             const startDate = new Date(hackathon.startDate);
             const hasStarted = now >= startDate;
 
-            // 招待される側の表示制御
             if (currentUserId !== hackathon.ownerId) {
-              // 締切られた、または開催中になった時に、招待を受け入れていない、またはチームに参加していない場合は非表示
+              // 招待される側
               if (
                 (hackathon.isDeadline || hasStarted) &&
                 (!invitation || !invitation.isJoin)
@@ -315,6 +273,21 @@ export function HackathonList({
                       </div>
                     ) : null;
                   })()}
+
+                  {/* 詳細ボタン: is_joinがtrueの場合のみ表示 */}
+                  {invitation && invitation.isJoin && (
+                    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => {
+                          setDetailHackathon(hackathon);
+                          setShowDetailModal(true);
+                        }}
+                        className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+                      >
+                        詳細を見る
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -340,6 +313,16 @@ export function HackathonList({
         }}
         hackathonName={selectedHackathon?.name || ""}
         isProcessing={fetcher.state === "submitting"}
+      />
+
+      <HackathonDetailModal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setDetailHackathon(null);
+        }}
+        hackathon={detailHackathon}
+        currentUserId={currentUserId}
       />
     </div>
   );

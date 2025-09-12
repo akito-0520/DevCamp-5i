@@ -60,6 +60,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   // ユーザーが作成したハッカソン一覧を取得
   const userHackathonLists = await getUserHackathonLists(userId);
 
+  // console.log(userHackathonLists);
   const groupHackathons = await getHackathons(groupId);
 
   const thisGroupHackathonLists = groupHackathons.filter((groupHackathon) => {
@@ -74,7 +75,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     groupMembers,
     group,
     thisGroupHackathonLists,
-    userHackathonLists, // Pass the invitation data
+    userHackathonLists,
   };
 }
 
@@ -192,7 +193,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Group() {
+export default function Room() {
   const {
     userId,
     roomUsersInfo,
@@ -209,7 +210,10 @@ export default function Group() {
   const isSaving = fetcher.state === "submitting";
 
   useEffect(() => {
-    setCurrentUser(userId);
+    if (userId) {
+      setCurrentUser(userId);
+    }
+
     roomUsersInfo.forEach((roomUserInfo) => {
       if (roomUserInfo.user) {
         const user = roomUserInfo.user;

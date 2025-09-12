@@ -1,4 +1,12 @@
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "~/firebaseConfig";
 import type { Hackathon } from "../types/Hackathon";
 
@@ -87,5 +95,15 @@ export async function getHackathons(groupId: string) {
       backendNumber: data.backend_number,
       frontendNumber: data.frontend_number,
     } as Hackathon;
+  });
+}
+
+export async function updateHackathonDeadline(
+  hackathonId: string,
+  isDeadline: boolean,
+) {
+  const hackathonRef = doc(db, "hackathon", hackathonId);
+  await updateDoc(hackathonRef, {
+    is_deadline: isDeadline,
   });
 }

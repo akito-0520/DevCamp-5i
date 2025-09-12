@@ -1,11 +1,24 @@
 import type { Hackathon } from "~/common/types/Hackathon";
+import { useFetcher } from "react-router";
+import { useState } from "react";
+import { DeadlineConfirmDialog } from "./DeadlineConfirmDialog";
 
 interface HackathonListProps {
   hackathons: Hackathon[];
   onSelect?: (hackathon: Hackathon) => void;
+  currentUserId?: string;
 }
 
-export function HackathonList({ hackathons, onSelect }: HackathonListProps) {
+export function HackathonList({
+  hackathons,
+  onSelect,
+  currentUserId,
+}: HackathonListProps) {
+  const fetcher = useFetcher();
+  const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
+  const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(
+    null,
+  );
   const formatDate = (date: Date): string => {
     if (!(date instanceof Date)) {
       date = new Date(date);
@@ -25,11 +38,20 @@ export function HackathonList({ hackathons, onSelect }: HackathonListProps) {
         </span>
       );
     } else if (now < startDate) {
-      return (
-        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-          募集中
-        </span>
-      );
+      // 締切済みの場合は「開催待ち」、そうでない場合は「募集中」
+      if (hackathon.isDeadline) {
+        return (
+          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">
+            開催待ち
+          </span>
+        );
+      } else {
+        return (
+          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+            募集中
+          </span>
+        );
+      }
     } else if (now >= startDate && now <= finishDate) {
       return (
         <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
@@ -73,7 +95,9 @@ export function HackathonList({ hackathons, onSelect }: HackathonListProps) {
               <h4 className="font-medium text-gray-900 dark:text-gray-100">
                 {hackathon.name}
               </h4>
-              {getStatusBadge(hackathon)}
+              <div className="flex items-center gap-2">
+                {getStatusBadge(hackathon)}
+              </div>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
               <p>
@@ -96,10 +120,46 @@ export function HackathonList({ hackathons, onSelect }: HackathonListProps) {
                     ` バックエンド${hackathon.backendNumber}人`}
                 </p>
               )}
+              {/* 締切ボタン: 自分が作成者で、開催前で、まだ締切になっていない場合のみ表示 */}
+              {currentUserId === hackathon.ownerId &&
+                new Date() < new Date(hackathon.startDate) &&
+                !hackathon.isDeadline && (
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        setSelectedHackathon(hackathon);
+                        setShowDeadlineDialog(true);
+                      }}
+                      className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                    >
+                      締切
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         ))}
       </div>
+
+      <DeadlineConfirmDialog
+        isOpen={showDeadlineDialog}
+        onClose={() => {
+          setShowDeadlineDialog(false);
+          setSelectedHackathon(null);
+        }}
+        onConfirm={() => {
+          if (selectedHackathon) {
+            const formData = new FormData();
+            formData.append("actionType", "updateDeadline");
+            formData.append("hackathonId", selectedHackathon.hackathonId);
+            fetcher.submit(formData, { method: "post" });
+            setShowDeadlineDialog(false);
+            setSelectedHackathon(null);
+          }
+        }}
+        hackathonName={selectedHackathon?.name || ""}
+        isProcessing={fetcher.state === "submitting"}
+      />
     </div>
   );
 }

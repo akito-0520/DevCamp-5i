@@ -15,6 +15,7 @@ import {
 import {
   createHackathon,
   getHackathons,
+  updateHackathonDeadline,
 } from "~/common/services/hackathon.server";
 import { getUserHackathonLists } from "~/common/services/hackathonList.server";
 
@@ -77,7 +78,23 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
 
-  if (actionType === "createHackathon") {
+  if (actionType === "updateDeadline") {
+    const hackathonId = formData.get("hackathonId");
+
+    if (!hackathonId) {
+      throw new Response("Missing hackathon ID", { status: 400 });
+    }
+
+    try {
+      await updateHackathonDeadline(hackathonId as string, true);
+      return { success: true };
+    } catch (error) {
+      throw new Response(
+        `Failed to update deadline: ${error instanceof Error ? error.message : String(error)}`,
+        { status: 500 },
+      );
+    }
+  } else if (actionType === "createHackathon") {
     const hackathonDataString = formData.get("hackathonData");
 
     if (!hackathonDataString) {

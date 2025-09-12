@@ -113,7 +113,10 @@ export function RoomGrid({
         </div>
 
         <div className="w-96">
-          <HackathonList hackathons={hackathons} />
+          <HackathonList
+            hackathons={hackathons}
+            currentUserId={currentUserId ?? undefined}
+          />
         </div>
       </div>
 

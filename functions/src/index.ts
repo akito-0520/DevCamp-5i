@@ -244,6 +244,7 @@ export const onNewOrder = onDocumentCreated(
     const data = eventData.data();
     const groupId = data.group_id; // ドキュメントに"userName"フィールドがあると仮定
     const hackathonId = event.params.orderId;
+    const ownerId = data.owner;
 
     try {
       console.log("グループリスト取得開始");
@@ -267,6 +268,7 @@ export const onNewOrder = onDocumentCreated(
       snapshot.docs.forEach((memberDoc) => {
         const memberData = memberDoc.data();
 
+        //memberData.user_idがownerだったら、is_invite_acceptをtrueにして登録する
         const newHackathonListDocRef = db.collection("hackathon_list").doc();
 
         const newEntry = {
@@ -276,6 +278,14 @@ export const onNewOrder = onDocumentCreated(
           is_invite_accept: false,
           is_join: false,
         };
+
+        // もしメンバーがオーナーであれば、is_invite_acceptをtrueに上書き
+        if (memberData.user_id === ownerId) {
+          newEntry.is_invite_accept = true;
+          console.log(
+            `Owner (${ownerId}) is being added with invite accepted.`
+          );
+        }
 
         batch.set(newHackathonListDocRef, newEntry);
       });

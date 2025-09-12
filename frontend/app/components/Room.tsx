@@ -27,7 +27,7 @@ export function Room({ room, isCurrentUser, onClick }: RoomProps) {
           ) : (
             <div className="w-10 h-10 rounded-full bg-gray-400 dark:bg-gray-600 mb-1 flex items-center justify-center">
               <span className="text-white text-xs font-semibold">
-                {(user.nickName || user.firstname || "?")
+                {(user.nickName || user.firstName || "?")
                   .charAt(0)
                   .toUpperCase()}
               </span>
@@ -35,7 +35,7 @@ export function Room({ room, isCurrentUser, onClick }: RoomProps) {
           )}
           <span className="text-xs text-center truncate w-full font-medium">
             {user.nickName ||
-              `${user.firstname} ${user.lastName}`.trim() ||
+              `${user.firstName} ${user.lastName}`.trim() ||
               "Unknown"}
           </span>
         </div>

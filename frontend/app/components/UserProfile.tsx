@@ -121,7 +121,6 @@ export function UserProfile({ userId, onClose }: UserProfileProps) {
               </p>
             </div>
           </div>
-
         </div>
       </div>
     </div>

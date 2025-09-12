@@ -1,4 +1,14 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  documentId,
+  getDocs,
+  query,
+  where,
+  collection,
+} from "firebase/firestore";
 import { db } from "~/firebaseConfig";
 import type { User } from "../types/User";
 
@@ -61,4 +71,40 @@ export async function updateUser(userId: string, updates: Partial<User>) {
     updateData.school_department = updates.schoolDepartment;
 
   await updateDoc(docRef, updateData);
+}
+
+export async function getUsers(userIds: string[]) {
+  if (userIds.length === 0) return new Map<string, User>();
+
+  const users = new Map<string, User>();
+
+  // Firebase has a limit of 10 for 'in' queries, so we need to batch
+  const batches = [];
+  for (let i = 0; i < userIds.length; i += 10) {
+    batches.push(userIds.slice(i, i + 10));
+  }
+
+  for (const batch of batches) {
+    const q = query(collection(db, "user"), where(documentId(), "in", batch));
+
+    const snap = await getDocs(q);
+
+    snap.docs.forEach((doc) => {
+      const data = doc.data();
+      users.set(doc.id, {
+        userId: doc.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        nickName: data.nick_name,
+        userCategory: data.user_category,
+        discordAccount: data.discord_account,
+        schoolCategory: data.school_category,
+        schoolName: data.school_name,
+        schoolYear: data.school_year,
+        schoolDepartment: data.school_department,
+      } as User);
+    });
+  }
+
+  return users;
 }

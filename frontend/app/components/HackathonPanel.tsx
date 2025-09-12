@@ -100,13 +100,13 @@ export function HackathonPanel({
             <div className="flex items-start">
               <div className="flex-1">
                 <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  主催者情報
+                  募集者情報
                 </h3>
                 <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                   <p>
                     <span className="font-medium">名前:</span>{" "}
                     {currentUser.nickName ||
-                      `${currentUser.firstname} ${currentUser.lastName}`}
+                      `${currentUser.firstName} ${currentUser.lastName}`}
                   </p>
                   <p>
                     <span className="font-medium">学校:</span>{" "}

@@ -244,7 +244,6 @@ export const onNewOrder = onDocumentCreated(
     const data = eventData.data();
     const groupId = data.group_id; // ドキュメントに"userName"フィールドがあると仮定
     const hackathonId = event.params.orderId;
-    const ownerId = data.owner;
 
     try {
       console.log("グループリスト取得開始");
@@ -268,19 +267,17 @@ export const onNewOrder = onDocumentCreated(
       snapshot.docs.forEach((memberDoc) => {
         const memberData = memberDoc.data();
 
-        if (memberData.user_id !== ownerId) {
-          const newHackathonListDocRef = db.collection("hackathon_list").doc();
+        const newHackathonListDocRef = db.collection("hackathon_list").doc();
 
-          const newEntry = {
-            hackathon_id: hackathonId,
-            group_id: groupId,
-            user_id: memberData.user_id,
-            is_invite_accept: false,
-            is_join: false,
-          };
+        const newEntry = {
+          hackathon_id: hackathonId,
+          group_id: groupId,
+          user_id: memberData.user_id,
+          is_invite_accept: false,
+          is_join: false,
+        };
 
-          batch.set(newHackathonListDocRef, newEntry);
-        }
+        batch.set(newHackathonListDocRef, newEntry);
       });
 
       // 5. バッチ処理をまとめて実行

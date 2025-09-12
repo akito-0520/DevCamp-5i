@@ -12,12 +12,14 @@ interface RoomGridProps {
   groupName?: string;
   groupId: string;
   hackathons?: Hackathon[];
+  userHackathonLists?: any[]; // Add invitation data
 }
 
 export function RoomGrid({
   groupName,
   groupId,
   hackathons = [],
+  userHackathonLists = [],
 }: RoomGridProps) {
   const { rooms, currentUserId, initializeRooms, moveUserToRoom, users } =
     useRoomStore();
@@ -116,6 +118,7 @@ export function RoomGrid({
           <HackathonList
             hackathons={hackathons}
             currentUserId={currentUserId ?? undefined}
+            userHackathonLists={userHackathonLists}
           />
         </div>
       </div>

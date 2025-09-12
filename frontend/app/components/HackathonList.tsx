@@ -7,18 +7,28 @@ interface HackathonListProps {
   hackathons: Hackathon[];
   onSelect?: (hackathon: Hackathon) => void;
   currentUserId?: string;
+  userHackathonLists?: any[]; // Add invitation data
 }
 
 export function HackathonList({
   hackathons,
   onSelect,
   currentUserId,
+  userHackathonLists = [],
 }: HackathonListProps) {
   const fetcher = useFetcher();
   const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(
     null,
   );
+
+  // Find invitation for a hackathon
+  const getInvitation = (hackathonId: string) => {
+    return userHackathonLists.find(
+      (invitation) => invitation.hackathonId === hackathonId,
+    );
+  };
+
   const formatDate = (date: Date): string => {
     if (!(date instanceof Date)) {
       date = new Date(date);
@@ -136,6 +146,36 @@ export function HackathonList({
                     </button>
                   </div>
                 )}
+
+              {/* 受け入れボタン: 主催者ではなく、招待されていて、まだ受け入れていない、開催前の場合のみ表示 */}
+              {(() => {
+                const invitation = getInvitation(hackathon.hackathonId);
+                const isBeforeStart =
+                  new Date() < new Date(hackathon.startDate);
+                const isNotOwner = currentUserId !== hackathon.ownerId;
+
+                return invitation &&
+                  !invitation.isInviteAccept &&
+                  isBeforeStart &&
+                  isNotOwner ? (
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        const formData = new FormData();
+                        formData.append("actionType", "acceptInvitation");
+                        formData.append("invitationId", invitation.id);
+                        fetcher.submit(formData, { method: "post" });
+                      }}
+                      disabled={fetcher.state === "submitting"}
+                      className="px-3 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors disabled:opacity-50"
+                    >
+                      {fetcher.state === "submitting"
+                        ? "受け入れ中..."
+                        : "受け入れる"}
+                    </button>
+                  </div>
+                ) : null;
+              })()}
             </div>
           </div>
         ))}

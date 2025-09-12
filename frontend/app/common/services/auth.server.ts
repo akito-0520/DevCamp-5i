@@ -41,15 +41,12 @@ export async function requireUserId(
 ) {
   const session = await getAuthSession(request);
   const userId = session.get("userId");
-  console.log("[AUTH] requireUserId - session userId:", userId);
 
   if (!userId || typeof userId !== "string") {
     const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
-    console.log("[AUTH] No userId found, redirecting to login");
     throw redirect(`/login?${searchParams}`);
   }
   const cleanUserId = userId.replace(/^firebase-/, "");
-  console.log("[AUTH] Returning clean userId:", cleanUserId);
   return cleanUserId;
 }
 
@@ -72,10 +69,8 @@ export async function logout(request: Request) {
 export async function createUserSession(userId: string, redirectTo: string) {
   const session = await getSession();
   session.set("userId", userId);
-  console.log("[AUTH] Creating session with userId:", userId);
 
   const cookie = await commitSession(session);
-  console.log("[AUTH] Session cookie created");
 
   return redirect(redirectTo, {
     headers: {

@@ -22,9 +22,7 @@ export const auth = admin.auth(app);
  */
 export async function verifyIdToken(idToken: string) {
   try {
-    console.log("[FIREBASE] Verifying ID token...");
     const decodedToken = await auth.verifyIdToken(idToken);
-    console.log("[FIREBASE] Token verified successfully, uid:", decodedToken.uid);
     return {
       success: true,
       user: {
@@ -36,7 +34,6 @@ export async function verifyIdToken(idToken: string) {
       },
     };
   } catch (error: any) {
-    console.error("[FIREBASE] Token verification failed:", error.message);
     return {
       success: false,
       error: error.message || "IDトークンの検証に失敗しました",

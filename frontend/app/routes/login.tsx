@@ -31,14 +31,12 @@ export async function action({ request }: Route.ActionArgs) {
         "../common/services/firebase.server"
       );
       const result = await verifyIdToken(idToken);
-      console.log("[LOGIN] Verify ID Token Result:", result);
 
       if (result.success && result.user) {
         const { getUser, createUser } = await import(
           "../common/services/user.server"
         );
         const userId = createUserIdFromFirebase(result.user.uid);
-        console.log("[LOGIN] Created userId:", userId);
 
         // Check if user exists
         const existingUser = await getUser(userId);
@@ -59,7 +57,6 @@ export async function action({ request }: Route.ActionArgs) {
           });
         }
 
-        console.log("[LOGIN] Creating user session for:", userId);
         return createUserSession(userId, "/home");
       }
 

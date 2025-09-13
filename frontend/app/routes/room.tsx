@@ -337,11 +337,11 @@ export default function Room() {
   };
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="mb-4 flex justify-between items-center">
+    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+      <div className="mb-6 flex justify-between items-center">
         <Link
           to="/home"
-          className="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors duration-200"
+          className="inline-flex items-center px-5 py-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium border border-gray-200 dark:border-gray-700 transform hover:scale-105"
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -361,7 +361,7 @@ export default function Room() {
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
-            className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -381,7 +381,7 @@ export default function Room() {
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
           >
             <svg
               className="w-5 h-5 mr-2"

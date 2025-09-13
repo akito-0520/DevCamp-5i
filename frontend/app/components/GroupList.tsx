@@ -32,14 +32,29 @@ export function GroupList({
             return (
               <div
                 key={group.id}
-                className="relative p-4 mb-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 border border-gray-200 hover:border-blue-400"
+                className="relative p-6 mb-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:-translate-y-1"
               >
                 <Link to={`/room?groupId=${group.id}`} className="block">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                     {group.name}
                   </h3>
-                  <p className="text-gray-600">{group.introduction}</p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {group.introduction}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
                     作成者:{" "}
                     {makeUserId?.nickName || makeUserId?.firstName || "Unknown"}
                   </p>

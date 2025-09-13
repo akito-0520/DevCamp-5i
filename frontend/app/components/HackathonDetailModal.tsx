@@ -8,6 +8,12 @@ interface HackathonDetailModalProps {
   hackathon: Hackathon | null;
   currentUserId?: string;
   isJoin?: boolean;
+  invitation?: {
+    id: string;
+    hackathonId: string;
+    isJoin: boolean;
+    isInviteAccept: boolean;
+  };
 }
 
 interface TeamMember {
@@ -28,6 +34,7 @@ export function HackathonDetailModal({
   hackathon,
   currentUserId,
   isJoin = false,
+  invitation,
 }: HackathonDetailModalProps) {
   const fetcher = useFetcher();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -66,20 +73,39 @@ export function HackathonDetailModal({
     const finishDate = new Date(hackathon.finishDate);
 
     if (now > finishDate) {
+      // 現在が終了日より後
       return (
-        <span className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded">
+        <span className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
           終了
         </span>
       );
     } else if (now < startDate) {
-      return (
-        <span className="px-3 py-1 text-sm bg-yellow-100 text-yellow-700 rounded">
-          開催待ち
-        </span>
-      );
+      // 現在が開始日より前
+      if (!hackathon.isDeadline) {
+        // 締切前
+        return (
+          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+            募集中
+          </span>
+        );
+      } else {
+        if (invitation?.isJoin) {
+          return (
+            <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">
+              開催待ち
+            </span>
+          );
+        } else {
+          return (
+            <span className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
+              終了
+            </span>
+          );
+        }
+      }
     } else {
       return (
-        <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded">
+        <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
           開催中
         </span>
       );
@@ -96,7 +122,7 @@ export function HackathonDetailModal({
       acc[teamNum].push(member);
       return acc;
     },
-    {} as Record<number, TeamMember[]>,
+    {} as Record<number, TeamMember[]>
   );
 
   return (
@@ -242,7 +268,7 @@ export function HackathonDetailModal({
                           ))}
                         </div>
                       </div>
-                    ),
+                    )
                   )}
                 </div>
               )}

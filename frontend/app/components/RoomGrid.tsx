@@ -62,7 +62,7 @@ export function RoomGrid({
       }
     }
     roomGrid.push(
-      <div key={y} className="flex gap-2">
+      <div key={y} className="flex gap-3">
         {row}
       </div>,
     );
@@ -110,8 +110,8 @@ export function RoomGrid({
       </div>
 
       <div className="flex gap-6">
-        <div className="inline-block p-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
-          <div className="flex flex-col gap-2">{roomGrid}</div>
+        <div className="inline-block p-10 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col gap-3">{roomGrid}</div>
         </div>
 
         <div className="w-96">

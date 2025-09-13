@@ -332,6 +332,11 @@ export function HackathonList({
             ? getInvitation(detailHackathon.hackathonId)?.isJoin || false
             : false
         }
+        invitation={
+          detailHackathon
+            ? getInvitation(detailHackathon.hackathonId)
+            : undefined
+        }
       />
     </div>
   );

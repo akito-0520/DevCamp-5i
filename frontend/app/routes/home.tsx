@@ -249,11 +249,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="flex justify-between p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+      <div className="flex justify-between p-6 bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-800">
         <button
           onClick={() => setShowCreateGroupDialog(true)}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
         >
           <svg
             className="w-5 h-5"
@@ -272,7 +272,7 @@ export default function Home() {
         </button>
         <button
           onClick={() => setShowLogoutDialog(true)}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
         >
           <svg
             className="w-5 h-5"
@@ -295,7 +295,7 @@ export default function Home() {
           {errorMessage}
         </div>
       )}
-      <div className="px-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-8">
           <GroupList
             groupList={groupList}
@@ -315,14 +315,29 @@ export default function Home() {
                   return (
                     <div
                       key={group.id}
-                      className="relative p-4 mb-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 border border-gray-200 hover:border-green-400"
+                      className="relative p-6 mb-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 hover:-translate-y-1"
                     >
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                           {group.name}
                         </h3>
-                        <p className="text-gray-600">{group.introduction}</p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {group.introduction}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
                           作成者:{" "}
                           {makeUserInfo?.nickName ||
                             makeUserInfo?.firstName ||
@@ -332,7 +347,7 @@ export default function Home() {
                       <button
                         onClick={() => handleJoinGroup(group.id)}
                         disabled={isSubmitting}
-                        className="absolute top-4 right-4 px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        className="absolute top-6 right-6 px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 transform hover:scale-105"
                       >
                         <svg
                           className="w-5 h-5"

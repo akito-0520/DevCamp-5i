@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    server: { allowedHosts: ["2182b4c4897b.ngrok-free.app"] },
     plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
     define: {
       "process.env.SESSION_SECRET": JSON.stringify(env.SESSION_SECRET),

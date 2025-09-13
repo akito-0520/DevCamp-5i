@@ -50,7 +50,8 @@ export async function createUser(user: User) {
 }
 
 export async function updateUser(userId: string, updates: Partial<User>) {
-  const docRef = doc(db, "user", userId);
+  const editedUserId = userId.replace("firebase-", "");
+  const docRef = doc(db, "user", editedUserId);
 
   const updateData: any = {};
   if (updates.firstName !== undefined)
@@ -70,7 +71,15 @@ export async function updateUser(userId: string, updates: Partial<User>) {
   if (updates.schoolDepartment !== undefined)
     updateData.school_department = updates.schoolDepartment;
 
-  await updateDoc(docRef, updateData);
+  // Check if document exists
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) {
+    // Document doesn't exist, create it with the update data
+    await setDoc(docRef, updateData);
+  } else {
+    // Document exists, update it
+    await updateDoc(docRef, updateData);
+  }
 }
 
 export async function getUsers(userIds: string[]) {

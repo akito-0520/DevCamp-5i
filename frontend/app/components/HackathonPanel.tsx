@@ -19,7 +19,7 @@ export function HackathonPanel({
     name: "",
     groupId: groupId,
     ownerId: currentUser.userId,
-    startDate: new Date(),
+    startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
     finishDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     isDeadline: false,
     teamSize: 3,

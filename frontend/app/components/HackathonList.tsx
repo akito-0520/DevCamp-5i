@@ -38,9 +38,15 @@ export function HackathonList({
   // Check if hackathon should be in closed tab
   const isClosedHackathon = (hackathon: Hackathon) => {
     const now = new Date();
+    const startDate = new Date(hackathon.startDate);
     const finishDate = new Date(hackathon.finishDate);
     const invitation = getInvitation(hackathon.hackathonId);
     const isOwner = currentUserId === hackathon.ownerId;
+
+    // 開催中（開始日〜終了日の間）の場合は必ず進行中タブに表示
+    if (now >= startDate && now <= finishDate) {
+      return false;
+    }
 
     if (isOwner) {
       // 主催者の場合

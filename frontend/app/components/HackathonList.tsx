@@ -8,7 +8,7 @@ interface HackathonListProps {
   hackathons: Hackathon[];
   onSelect?: (hackathon: Hackathon) => void;
   currentUserId?: string;
-  userHackathonLists?: any[]; // Add invitation data
+  userHackathonLists?: any[];
 }
 
 export function HackathonList({
@@ -20,18 +20,18 @@ export function HackathonList({
   const fetcher = useFetcher();
   const [showDeadlineDialog, setShowDeadlineDialog] = useState(false);
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(
-    null,
+    null
   );
   const [activeTab, setActiveTab] = useState<"active" | "closed">("active");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailHackathon, setDetailHackathon] = useState<Hackathon | null>(
-    null,
+    null
   );
 
   // Find invitation for a hackathon
   const getInvitation = (hackathonId: string) => {
     return userHackathonLists.find(
-      (invitation) => invitation.hackathonId === hackathonId,
+      (invitation) => invitation.hackathonId === hackathonId
     );
   };
 

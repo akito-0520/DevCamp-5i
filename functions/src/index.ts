@@ -1,13 +1,42 @@
-import * as admin from "firebase-admin";
-import * as logger from "firebase-functions/logger";
-// 必要なトリガーを両方インポートする
+import { onRequest } from "firebase-functions/v2/https";
 import {
   onDocumentCreated,
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
+import express from "express";
 
-admin.initializeApp();
-const db = admin.firestore();
+// ===================================================
+// Part 1: SSRサーバー関数 (Expressラッパーを使用)
+// ===================================================
+
+const remixServer = express();
+
+// frontendのビルド成果物から "entry" をインポート
+
+// ===================================================
+// Part 1: SSRサーバー関数
+// ===================================================
+remixServer.all("*", async (request, response) => {
+  // ★ 関数が呼び出された時に初めてサーバープログラムとAdmin SDKをインポート
+  const { entry } = await import("../server/index.js");
+  const admin = await import("firebase-admin");
+
+  // ★ 関数が呼び出された時に初めて初期化
+  if (admin.apps.length === 0) {
+    admin.initializeApp();
+  }
+
+  // Remixサーバーハンドラを呼び出す
+  return entry.module.default(request, response);
+});
+
+// Expressアプリをエクスポート
+export const ssrServer = onRequest(remixServer);
+
+// 他のバックエンド関数がある場合は、こちらも忘れずに
+// export * from "./other-functions";
+// 他のバックエンド関数も忘れずにエクスポート
+// export * from "./other-functions";
 
 // 位置情報(例: 1205)を座標(例: {x: 12, y: 5})に変換するヘルパー関数
 const parsePosition = (position: { x: number; y: number } | undefined) => {
@@ -18,16 +47,12 @@ const parsePosition = (position: { x: number; y: number } | undefined) => {
   ) {
     return position;
   }
-  return { x: 0, y: 0 }; // デフォルトの座標
+  return { x: 0, y: 0 };
 };
 
-// 2つの座標間のマンハッタン距離を計算するヘルパー関数
 const calculateDistance = (
   pos1: { x: number; y: number },
-  pos2: {
-    x: number;
-    y: number;
-  }
+  pos2: { x: number; y: number }
 ) => {
   return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
 };
@@ -35,6 +60,11 @@ const calculateDistance = (
 export const onHackathonDeadline = onDocumentUpdated(
   "hackathon/{hackathonId}",
   async (event) => {
+    const admin = await import("firebase-admin");
+    if (admin.apps.length === 0) {
+      admin.initializeApp();
+    }
+    const db = admin.firestore();
     console.log("本格募集開始");
     // 更新前後のデータを取得
     const dataBefore = event.data?.before.data();
@@ -234,6 +264,11 @@ export const onHackathonDeadline = onDocumentUpdated(
 export const onNewOrder = onDocumentCreated(
   "hackathon/{orderId}",
   async (event) => {
+    const admin = await import("firebase-admin");
+    if (admin.apps.length === 0) {
+      admin.initializeApp();
+    }
+    const db = admin.firestore();
     // 1. 新しく作成されたドキュメントのデータを取得します。
     console.log("hackathon_list作成開始");
     const eventData = event.data;
@@ -292,10 +327,6 @@ export const onNewOrder = onDocumentCreated(
 
       // 5. バッチ処理をまとめて実行
       await batch.commit();
-
-      logger.info(
-        `Successfully added ${snapshot.size} members from group ${groupId} to hackathon_list for hackathon ${hackathonId}.`
-      );
     } catch (error) {
       console.error("ドキュメントの取得中にエラーが発生しました:", error);
     }

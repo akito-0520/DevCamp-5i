@@ -71,7 +71,15 @@ export async function updateUser(userId: string, updates: Partial<User>) {
   if (updates.schoolDepartment !== undefined)
     updateData.school_department = updates.schoolDepartment;
 
-  await updateDoc(docRef, updateData);
+  // Check if document exists
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) {
+    // Document doesn't exist, create it with the update data
+    await setDoc(docRef, updateData);
+  } else {
+    // Document exists, update it
+    await updateDoc(docRef, updateData);
+  }
 }
 
 export async function getUsers(userIds: string[]) {

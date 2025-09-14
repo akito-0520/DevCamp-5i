@@ -12,7 +12,7 @@ export type Hackathon = {
   teamSize?: number;
   teamSizeUpper?: number;
   teamSizeLower?: number;
-  URL?: string;
+  url?: string;
   backendNumber?: number;
   frontendNumber?: number;
 };

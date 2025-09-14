@@ -167,16 +167,16 @@ export function HackathonDetailModal({
                 {formatDate(hackathon.startDate)} 〜{" "}
                 {formatDate(hackathon.finishDate)}
               </p>
-              {hackathon.URL && (
+              {hackathon.url && (
                 <p className="text-gray-700 dark:text-gray-300">
                   <span className="font-medium">URL:</span>{" "}
                   <a
-                    href={hackathon.URL}
+                    href={hackathon.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 underline"
                   >
-                    {hackathon.URL}
+                    {hackathon.url}
                   </a>
                 </p>
               )}

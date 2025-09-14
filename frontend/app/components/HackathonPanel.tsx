@@ -207,9 +207,9 @@ export function HackathonPanel({
             </label>
             <input
               type="url"
-              value={hackathonData.URL}
+              value={hackathonData.url}
               onChange={(e) =>
-                setHackathonData({ ...hackathonData, URL: e.target.value })
+                setHackathonData({ ...hackathonData, url: e.target.value })
               }
               placeholder="https://example.com/hackathon"
               className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700"

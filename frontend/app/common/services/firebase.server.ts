@@ -45,5 +45,5 @@ export async function verifyIdToken(idToken: string) {
  * Firebaseユーザー情報からセッション用のユーザーIDを生成
  */
 export function createUserIdFromFirebase(firebaseUid: string): string {
-  return `firebase-${firebaseUid}`;
+  return firebaseUid;
 }

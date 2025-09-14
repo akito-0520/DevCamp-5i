@@ -46,15 +46,14 @@ export async function requireUserId(
     const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
     throw redirect(`/login?${searchParams}`);
   }
-  const cleanUserId = userId.replace(/^firebase-/, "");
-  return cleanUserId;
+  return userId;
 }
 
 export async function getUserId(request: Request) {
   const session = await getAuthSession(request);
   const userId = session.get("userId");
   if (!userId || typeof userId !== "string") return null;
-  return userId.replace(/^firebase-/, "");
+  return userId;
 }
 
 export async function logout(request: Request) {

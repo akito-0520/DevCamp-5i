@@ -50,8 +50,7 @@ export async function createUser(user: User) {
 }
 
 export async function updateUser(userId: string, updates: Partial<User>) {
-  const editedUserId = userId.replace("firebase-", "");
-  const docRef = doc(db, "user", editedUserId);
+  const docRef = doc(db, "user", userId);
 
   const updateData: any = {};
   if (updates.firstName !== undefined)

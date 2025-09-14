@@ -122,7 +122,7 @@ export function HackathonDetailModal({
       acc[teamNum].push(member);
       return acc;
     },
-    {} as Record<number, TeamMember[]>
+    {} as Record<number, TeamMember[]>,
   );
 
   return (
@@ -268,7 +268,7 @@ export function HackathonDetailModal({
                           ))}
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               )}

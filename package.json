@@ -1,0 +1,11 @@
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "scripts": {
+    "build:frontend": "npm run build --prefix frontend",
+    "build:functions": "npm run build --prefix functions",
+    "copy-server": "cp -r frontend/build/server functions/server",
+    "build": "npm run build:frontend && npm run copy-server && npm run build:functions",
+    "deploy": "npm run build && firebase deploy"
+  }
+}
